@@ -4,33 +4,50 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common import StaleElementReferenceException
 
-# Create a new instance of the Chrome web driver
-driver = webdriver.Chrome('/path/to/chromedriver')
 
-# Open Chrome
-driver.get('https://www.google.com')
+def main():
+    # Create a new instance of the Chrome web driver
+    service = Service('/path/to/chromedriver')
+    driver = webdriver.Chrome(service=service)
 
-# Find the search bar element and type in your search keyword
-search_box = driver.find_element(By.NAME, 'q')
-search_box.send_keys(f'"Lim Chia Chung"')
+    # Open Chrome
+    driver.get('https://www.google.com')
 
-# Submit the search query by sending the Enter key
-search_box.send_keys(Keys.RETURN)
+    # Load the search keywords from a DataFrame
+    df = pd.read_excel(r'Hit Name List for January 2023 (ACP).xlsx', engine='openpyxl')
+    search_keywords = df['Hit Name'].tolist()
 
-# Wait for the page to load
-sleep(3)
+    # Find the search bar element
+    search_box = driver.find_element(By.NAME, 'q')
 
-# Find all the search result links on the page
-search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
+    # Type in each search keyword and get the search results
+    for keyword in search_keywords:
+        # Find the search bar element
+        search_box = driver.find_element(By.NAME, 'q')
+        search_box.clear()
+        search_box.send_keys(f'"{keyword}"')  # type in the search keyword
+        search_box.send_keys(Keys.RETURN)  # submit the search query
 
-# Click on each search result link
-for link in search_results:
-    url = link.get_attribute('href')
-    print(url)
+        # Wait for the page to load
+        sleep(3)
 
-# Close the browser window
-driver.close()
+        # Find all the search result links on the page
+        search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
+
+        # Print the search result links
+        for link in search_results:
+            url = link.get_attribute('href')
+            print(url)
+
+    # Close the browser window
+    driver.close()
+
+
+if __name__ == '__main__':
+    main()
 
