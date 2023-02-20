@@ -22,19 +22,17 @@ def main():
     df = pd.read_excel(r'Hit Name List for January 2023 (ACP).xlsx', engine='openpyxl')
     search_keywords = df['Hit Name'].tolist()
 
-    # Find the search bar element
-    search_box = driver.find_element(By.NAME, 'q')
-
     # Type in each search keyword and get the search results
     for keyword in search_keywords:
+        print(f'Current Keyword: {keyword}')
         # Find the search bar element
-        search_box = driver.find_element(By.NAME, 'q')
+        search_box = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'q')))
         search_box.clear()
         search_box.send_keys(f'"{keyword}"')  # type in the search keyword
         search_box.send_keys(Keys.RETURN)  # submit the search query
 
         # Wait for the page to load
-        sleep(3)
+        sleep(5)
 
         # Find all the search result links on the page
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
@@ -43,6 +41,8 @@ def main():
         for link in search_results:
             url = link.get_attribute('href')
             print(url)
+
+        sleep(10)
 
     # Close the browser window
     driver.close()
