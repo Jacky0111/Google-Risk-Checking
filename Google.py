@@ -15,15 +15,17 @@ def main():
     service = Service('/path/to/chromedriver')
     driver = webdriver.Chrome(service=service)
 
-    # Open Chrome
-    driver.get('https://www.google.com')
-
     # Load the search keywords from a DataFrame
     df = pd.read_excel(r'Hit Name List for January 2023 (ACP).xlsx', engine='openpyxl')
     search_keywords = df['Hit Name'].tolist()
 
     # Type in each search keyword and get the search results
     for keyword in search_keywords:
+        print(f'Current Keyword: {keyword}')
+
+        driver = webdriver.Chrome(service=service)
+        driver.get('https://www.google.com')
+
         # Find the search bar element
         search_box = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'q')))
         search_box.clear()
@@ -37,12 +39,13 @@ def main():
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
         # Print the search result links
-        for link in search_results:
+        for index, link in enumerate(search_results):
             url = link.get_attribute('href')
-            print(url)
+            print(index + 1, url)
 
-    # Close the browser window
-    driver.close()
+        # Close the browser window
+        driver.close()
+        driver.quit()
 
 
 if __name__ == '__main__':
