@@ -12,16 +12,23 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def main():
-    df = pd.read_excel(r'Hit-Name-List-for-January-2023-(ACP).xlsx', engine='openpyxl')
+    df = pd.DataFrame()
+    df_ori = pd.read_excel(r'test-file.xlsx', engine='openpyxl')
 
     # Extract english name from Hit Name
-    df['EN_HIT_NAME'] = df['Hit Name'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
-    df['EN_HIT_NAME'] = df['EN_HIT_NAME'].apply(lambda x: x.strip())
+    df_ori['EN_HIT_NAME'] = df_ori['Hit Name'].str.replace(r'[^a-zA-Z\s]', '').str.strip()
 
-    search_name = lambda name: 'https://www.google.com/search?q=' + name.replace(' ', '+')
-    df['URL'] = df['EN_HIT_NAME'].apply(search_name)
+    # Combine google search link with extracted english name
+    df_ori['URL'] = 'https://www.google.com/search?q=' + df_ori['EN_HIT_NAME'].str.replace(' ', '+')
 
-    for index, row in df.iterrows():
+    for index1, row in df_ori.iterrows():
+        alert_id = row[1]
+        hit_name = row[2]
+        country = row[3]
+        entry_cat = row[4]
+        entry_sub_cat = row[5]
+        ent_id = row[6]
+
         driver = setDriver()
         driver.get(row['URL'])
         sleep(5)
@@ -29,13 +36,29 @@ def main():
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
         # Print the search result links
-        for index, link in enumerate(search_results):
+        for index2, link in enumerate(search_results):
             url = link.get_attribute('href')
-            print(index + 1, url)
+
+            table_items = {'Alert ID': alert_id,
+                           'Hit Name': hit_name,
+                           'Country': country,
+                           'Entry-category': entry_cat,
+                           'Entry-subcategory': entry_sub_cat,
+                           'Ent Id': ent_id,
+                           'URL': url
+                           }
+
+            print(index2)
+            print('----------')
+            print(table_items)
+
+            df = pd.concat([df, pd.DataFrame([table_items])])
 
         # Close the browser window
         driver.close()
         driver.quit()
+
+    df.to_csv('output_file.csv', index=False, encoding='utf-8')
 
 
 def setDriver():
