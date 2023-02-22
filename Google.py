@@ -40,7 +40,7 @@ def main():
                                  'URL': link.get_attribute('href')
                                  } for link in search_results]
 
-            print(table_items_list)
+            # print(table_items_list)
 
             # Append the list of dictionaries to the final dataframe
             df = pd.concat([df, pd.DataFrame(table_items_list)])
@@ -54,7 +54,7 @@ def main():
 
 def setDriver():
     option = Options()
-    # option.add_argument('--headless')
+    option.add_argument('--headless')
     option.add_argument('--disable-gpu')
     option.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
     browser = webdriver.Chrome(options=option)
