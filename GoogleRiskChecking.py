@@ -1,6 +1,7 @@
 import pandas as pd
 from time import sleep
 from pathlib import Path
+from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,33 +12,36 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from VIPS import Vips
+from VIPS.Vips import Vips
 
 
 class GRC:
     input_file = None
     output_file = None
+    current_date_time = None
     keywords = list()
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
     df_ori = pd.DataFrame()
 
     def __int__(self, input_file):
-        # self.input_file = input_file
+        self.input_file = input_file
+        self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.xlsx"
+        self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
         # self.readExcelCSV(self.input_file)
         # self.extractEngName()
         # self.generateLink()
         # self.googleSearchHitName()
-        self.specificNameWebsite()
         self.readExcelCSV(self.output_file)
+        self.specificNameWebsite()
 
     def readExcelCSV(self, file):
-        if Path(file).suffix == '.xlsx':
+        try:
             df_dict = pd.read_excel(file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
             self.df_ori = df_dict['Sheet1']
             self.keywords = df_dict['Keywords List']['Keywords'].tolist()
-        else:
-            self.df2 = pd.read_csv(file)
+        except ValueError:
+            self.df2 = pd.read_excel(file)
 
     '''
     Extract english name from Hit Name
@@ -53,17 +57,17 @@ class GRC:
 
     def googleSearchHitName(self):
         with GRC.setDriver() as driver:
-            for index1, row in self.df_ori.iterrows():
+            for index, row in self.df_ori.iterrows():
                 table_items = GRC.extractHitNameResults(driver, row)
                 self.df1 = pd.concat([self.df1, table_items])
 
-        self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.csv"
-        self.df1.to_csv(self.output_file, index=False, encoding='utf-8')
+        self.df1.to_excel(self.output_file, index=False)
 
     def specificNameWebsite(self):
         with GRC.setDriver() as driver:
-            pass
-
+            for index, row in self.df2.iterrows():
+                vips = Vips(row['URL'], driver)
+                # vips.runner()
 
     @staticmethod
     def extractHitNameResults(driver, row):
