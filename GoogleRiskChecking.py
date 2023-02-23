@@ -10,21 +10,26 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from VIPS import Vips
+
 
 class GRC:
-    excel_file = None
+    input_file = None
+    output_file = None
     keywords = list()
+    df = pd.DataFrame()
     df_ori = pd.DataFrame()
 
-    def __int__(self, excel_file):
-        self.excel_file = excel_file
+    def __int__(self, input_file):
+        self.input_file = input_file
         self.readExcel()
         self.extractEngName()
         self.generateLink()
         self.googleSearchHitName()
+        # self.specificNameWebsite()
 
     def readExcel(self):
-        df_dict = pd.read_excel(self.excel_file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
+        df_dict = pd.read_excel(self.input_file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
         self.df_ori = df_dict['Sheet1']
         self.keywords = df_dict['Keywords List']['Keywords'].tolist()
 
@@ -41,14 +46,17 @@ class GRC:
         self.df_ori['URL'] = 'https://www.google.com/search?q=' + self.df_ori['EN_HIT_NAME'].str.replace(' ', '+')
 
     def googleSearchHitName(self):
-        data = pd.DataFrame()
-
         with GRC.setDriver() as driver:
             for index1, row in self.df_ori.iterrows():
                 table_items = GRC.extractHitNameResults(driver, row)
-                data = pd.concat([data, table_items])
+                self.df = pd.concat([self.df, table_items])
 
-        data.to_csv('output_file.csv', index=False, encoding='utf-8')
+        self.df.to_csv(f'{self.input_file}_output_file.csv', index=False, encoding='utf-8')
+
+    def specificNameWebsite(self):
+        with GRC.setDriver() as driver:
+            pass
+
 
     @staticmethod
     def extractHitNameResults(driver, row):
@@ -83,4 +91,4 @@ class GRC:
 
 
 if __name__ == '__main__':
-    GRC().__int__(excel_file=r'test-file.xlsx')
+    GRC().__int__(input_file=r'test_file.xlsx')
