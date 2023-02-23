@@ -1,5 +1,5 @@
 #  4.1 Visual Block Extraction
-from BlockRule import BlockRule
+from VIPS.BlockRule import BlockRule
 
 
 class VisualBlockExtraction:
