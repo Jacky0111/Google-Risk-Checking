@@ -87,7 +87,8 @@ class Vips:
     def setFileName(self):
         parse_url = urlparse(self.url)
         path = r'Screenshots/' + parse_url.netloc + '_' + str(datetime.now().strftime("%H%M-%d-%b-%Y")) + '/'
-        self.file_name = path + parse_url.netloc
+        self.file_name = 'C:/Screenshots/' + str(datetime.now().strftime("%H%M-%d-%b-%Y")) + '/' + str(self.row) + '.pdf'
+
         os.makedirs(path)
 
     '''
