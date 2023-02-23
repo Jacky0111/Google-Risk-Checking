@@ -13,6 +13,7 @@ from VIPS.VisualBlockExtraction import VisualBlockExtraction
 
 
 class GRC:
+    file_name = None
     input_file = None
     output_file = None
     current_date_time = None
@@ -21,7 +22,7 @@ class GRC:
     df2 = pd.DataFrame()
     df_ori = pd.DataFrame()
 
-    def __int__(self, input_file):
+    def __init__(self, input_file):
         self.input_file = input_file
         self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
@@ -34,8 +35,8 @@ class GRC:
         self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
-        self.readExcelCSV(self.output_file)
-        self.specificNameWebsite()
+        # self.readExcelCSV(self.output_file)
+        # self.specificNameWebsite()
 
     def readExcelCSV(self, file):
         try:
@@ -61,19 +62,25 @@ class GRC:
         with GRC.setDriver() as driver:
             for index, row in self.df_ori.iterrows():
                 table_items = GRC.extractHitNameResults(driver, row)
+                table_items.insert(0, 'Index Number', index + 1)
+                table_items.index = table_items.index + 1
+                table_items.index.name = 'No.'
                 self.df1 = pd.concat([self.df1, table_items])
 
-        self.df1.to_excel(self.output_file, index=False)
+        self.df1.to_excel(self.output_file)
 
     def specificNameWebsite(self):
         with GRC.setDriver() as driver:
             for index, row in self.df2.iterrows():
-                vips = Vips(row['URL'], driver)
-                # vips.runner()
+                self.file_name = 'C:/Screenshots/' + str(datetime.now().strftime("%H%M-%d-%b-%Y")) + '/' + str(self.row) + '.jpeg'
+                self.setFileName()
+
+    def setFileName(self):
+        pass
 
     @staticmethod
     def extractHitNameResults(driver, row):
-        alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[1:8]
+        no, alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[0:8]
 
         driver.get(url)
         sleep(5)
@@ -81,7 +88,8 @@ class GRC:
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
         # Create a list of dictionaries for each row in the search results
-        table_items_list = [{'Alert ID': alert_id,
+        table_items_list = [{'No': no,
+                             'Alert ID': alert_id,
                              'Hit Name': hit_name,
                              'Country': country,
                              'Entry-category': entry_cat,
@@ -104,4 +112,6 @@ class GRC:
 
 
 if __name__ == '__main__':
-    GRC().__int__(input_file=r'test_file.xlsx')
+    grc = GRC(input_file=r'test_file.xlsx')
+    grc.runner()
+
