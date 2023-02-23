@@ -5,14 +5,11 @@ from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import DesiredCapabilities
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from VIPS.Vips import Vips
+from VIPS.VisualBlockExtraction import VisualBlockExtraction
 
 
 class GRC:
@@ -28,10 +25,15 @@ class GRC:
         self.input_file = input_file
         self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
-        # self.readExcelCSV(self.input_file)
-        # self.extractEngName()
-        # self.generateLink()
-        # self.googleSearchHitName()
+
+    def runner(self):
+        # Step 1: Google boolean search hit name and store the URL to new output file.
+        self.readExcelCSV(self.input_file)
+        self.extractEngName()
+        self.generateLink()
+        self.googleSearchHitName()
+
+        # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcelCSV(self.output_file)
         self.specificNameWebsite()
 
