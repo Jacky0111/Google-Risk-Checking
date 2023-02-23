@@ -28,15 +28,15 @@ class GRC:
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     def runner(self):
-        # Step 1: Google boolean search hit name and store the URL to new output file.
-        self.readExcelCSV(self.input_file)
-        self.extractEngName()
-        self.generateLink()
-        self.googleSearchHitName()
+        # # Step 1: Google boolean search hit name and store the URL to new output file.
+        # self.readExcelCSV(self.input_file)
+        # self.extractEngName()
+        # self.generateLink()
+        # self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
-        # self.readExcelCSV(self.output_file)
-        # self.specificNameWebsite()
+        self.readExcelCSV(self.output_file)
+        self.specificNameWebsite()
 
     def readExcelCSV(self, file):
         try:
@@ -56,13 +56,13 @@ class GRC:
     Generate link by combine google search link with extracted english name
     '''
     def generateLink(self):
-        self.df_ori['URL'] = 'https://www.google.com/search?q=' + self.df_ori['EN_HIT_NAME'].str.replace(' ', '+')
+        self.df_ori['URL'] = 'https://www.google.com/search?q=' + self.df_ori['EN_HIT_NAME'].str.replace(' ', '+') + \
+                             ' AND (~crime OR ~corruption OR ~money laundering OR ~bribe)'.replace(' ', '+')
 
     def googleSearchHitName(self):
         with GRC.setDriver() as driver:
             for index, row in self.df_ori.iterrows():
                 table_items = GRC.extractHitNameResults(driver, row)
-                table_items.insert(0, 'Index Number', index + 1)
                 table_items.index = table_items.index + 1
                 table_items.index.name = 'No.'
                 self.df1 = pd.concat([self.df1, table_items])
@@ -72,15 +72,91 @@ class GRC:
     def specificNameWebsite(self):
         with GRC.setDriver() as driver:
             for index, row in self.df2.iterrows():
-                self.file_name = 'C:/Screenshots/' + str(datetime.now().strftime("%H%M-%d-%b-%Y")) + '/' + str(self.row) + '.jpeg'
-                self.setFileName()
+                self.file_name = 'C:/Screenshots/' + str(datetime.now().strftime("%H%M-%d-%b-%Y")) + '_' + \
+                                 row['Alert ID'] + '_' + row['No.'] + '.jpeg'
 
-    def setFileName(self):
-        pass
+    '''
+    Retrieve Java Script from the web page
+    '''
+    def getJavaScript(self):
+        self.browser.get(self.url)
+        sleep(5)
+
+        # Before closing the web server make sure get all the information required
+        self.window_width = 1920
+        self.window_height = self.browser.execute_script('return document.body.parentNode.scrollHeight')
+
+        self.output = Output()
+        self.output.screenshotImage(self.browser, self.window_width, self.window_height, self.file_name)
+
+        # Read in DOM java script file as string
+        file = open('DOM/dom.js', 'r')
+        java_script = file.read()
+
+        # Add additional javascript code to run our dom.js to JSON method
+        java_script += '\nreturn JSON.stringify(toJSON(document.getElementsByTagName("BODY")[0]));'
+
+        # Run the javascript
+        x = self.browser.execute_script(java_script)
+
+        self.browser.close()
+        self.browser.quit()
+
+        self.convertToDomTree(x)
+
+    '''
+    Use the JavaScript obtained from getJavaScript() to convert to DOM Tree (Recursive Function)
+    @param obj
+    @param parentNode 
+     @return node
+    '''
+    def convertToDomTree(self, obj, parentNode=None):
+        if isinstance(obj, str):
+            # Use json lib to load our json string
+            json_obj = json.loads(obj)
+        else:
+            json_obj = obj
+        node_type = json_obj['nodeType']
+        node = DomNode(node_type)
+
+        # Element Node
+        if node_type == 1:
+            node.createElement(json_obj['tagName'])
+            attributes = json_obj['attributes']
+            if attributes is not None:
+                node.setAttributes(attributes)
+            visual_cues = json_obj['visual_cues']
+            if visual_cues is not None:
+                node.setVisualCues(visual_cues)
+        # Text Node (Free Text)
+        elif node_type == 3:
+            node.createTextNode(json_obj['nodeValue'], parentNode)
+            if node.parent_node is not None:
+                visual_cues = node.parent_node.visual_cues
+                if visual_cues is not None:
+                    node.setVisualCues(visual_cues)
+
+        self.node_list.append(node)
+        if node_type == 1:
+            child_nodes = json_obj['childNodes']
+            for i in range(len(child_nodes)):
+                if child_nodes[i]['nodeType'] == 1:
+                    node.appendChild(self.convertToDomTree(child_nodes[i], node))
+                    print(f'NODE_{i}\n======\n{node.__str__()}')
+                elif child_nodes[i]['nodeType'] == 3:
+                    try:
+                        if not child_nodes[i]['nodeValue'].isspace():
+                            node.appendChild(self.convertToDomTree(child_nodes[i], node))
+                            print(f'NODE_{i}\n======\n{node.__str__()}')
+                    except KeyError:
+                        print('Key Error, abnormal text node')
+
+        return node
+
 
     @staticmethod
     def extractHitNameResults(driver, row):
-        no, alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[0:8]
+        alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[1:8]
 
         driver.get(url)
         sleep(5)
@@ -88,8 +164,7 @@ class GRC:
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
         # Create a list of dictionaries for each row in the search results
-        table_items_list = [{'No': no,
-                             'Alert ID': alert_id,
+        table_items_list = [{'Alert ID': alert_id,
                              'Hit Name': hit_name,
                              'Country': country,
                              'Entry-category': entry_cat,
