@@ -1,5 +1,6 @@
 import pandas as pd
 from time import sleep
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -51,7 +52,8 @@ class GRC:
                 table_items = GRC.extractHitNameResults(driver, row)
                 self.df = pd.concat([self.df, table_items])
 
-        self.df.to_csv(f'{self.input_file}_output_file.csv', index=False, encoding='utf-8')
+        output_name = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.csv"
+        self.df.to_csv(output_name, index=False, encoding='utf-8')
 
     def specificNameWebsite(self):
         with GRC.setDriver() as driver:
