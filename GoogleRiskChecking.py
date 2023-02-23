@@ -18,21 +18,26 @@ class GRC:
     input_file = None
     output_file = None
     keywords = list()
-    df = pd.DataFrame()
+    df1 = pd.DataFrame()
+    df2 = pd.DataFrame()
     df_ori = pd.DataFrame()
 
     def __int__(self, input_file):
-        self.input_file = input_file
-        self.readExcel()
-        self.extractEngName()
-        self.generateLink()
-        self.googleSearchHitName()
-        # self.specificNameWebsite()
+        # self.input_file = input_file
+        # self.readExcelCSV(self.input_file)
+        # self.extractEngName()
+        # self.generateLink()
+        # self.googleSearchHitName()
+        self.specificNameWebsite()
+        self.readExcelCSV(self.output_file)
 
-    def readExcel(self):
-        df_dict = pd.read_excel(self.input_file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
-        self.df_ori = df_dict['Sheet1']
-        self.keywords = df_dict['Keywords List']['Keywords'].tolist()
+    def readExcelCSV(self, file):
+        if Path(file).suffix == '.xlsx':
+            df_dict = pd.read_excel(file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
+            self.df_ori = df_dict['Sheet1']
+            self.keywords = df_dict['Keywords List']['Keywords'].tolist()
+        else:
+            self.df2 = pd.read_csv(file)
 
     '''
     Extract english name from Hit Name
@@ -50,10 +55,10 @@ class GRC:
         with GRC.setDriver() as driver:
             for index1, row in self.df_ori.iterrows():
                 table_items = GRC.extractHitNameResults(driver, row)
-                self.df = pd.concat([self.df, table_items])
+                self.df1 = pd.concat([self.df1, table_items])
 
-        output_name = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.csv"
-        self.df.to_csv(output_name, index=False, encoding='utf-8')
+        self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.csv"
+        self.df1.to_csv(self.output_file, index=False, encoding='utf-8')
 
     def specificNameWebsite(self):
         with GRC.setDriver() as driver:
