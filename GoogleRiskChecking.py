@@ -150,14 +150,15 @@ class GRC:
     Use the JavaScript obtained from getJavaScript() to convert to DOM Tree (Recursive Function)
     @param obj
     @param parentNode 
-     @return node
+    @return node
     '''
-    def convertToDomTree(self, obj, parent_node=None):
+    def convertToDomTree(self, obj, parentNode=None):
         if isinstance(obj, str):
             # Use json lib to load our json string
             json_obj = json.loads(obj)
         else:
             json_obj = obj
+
         node_type = json_obj['nodeType']
         node = DomNode(node_type)
 
@@ -172,7 +173,7 @@ class GRC:
                 node.setVisualCues(visual_cues)
         # Text Node (Free Text)
         elif node_type == 3:
-            node.createTextNode(json_obj['nodeValue'], parent_node)
+            node.createTextNode(json_obj['nodeValue'], parentNode)
             if node.parent_node is not None:
                 visual_cues = node.parent_node.visual_cues
                 if visual_cues is not None:
@@ -181,19 +182,27 @@ class GRC:
         self.node_list.append(node)
         if node_type == 1:
             child_nodes = json_obj['childNodes']
-            for i in range(len(child_nodes)):
-                if child_nodes[i]['nodeType'] == 1:
-                    node.appendChild(self.convertToDomTree(child_nodes[i], node))
-                    print(f'NODE_{i}\n======\n{node.__str__()}')
-                elif child_nodes[i]['nodeType'] == 3:
+            if isinstance(child_nodes, str):
+                return
+            else:
+                for i in range(len(child_nodes)):
                     try:
-                        if not child_nodes[i]['nodeValue'].isspace():
+                        if child_nodes[i]['nodeType'] == 1:
                             node.appendChild(self.convertToDomTree(child_nodes[i], node))
                             print(f'NODE_{i}\n======\n{node.__str__()}')
+                        elif child_nodes[i]['nodeType'] == 3:
+                            try:
+                                if not child_nodes[i]['nodeValue'].isspace():
+                                    node.appendChild(self.convertToDomTree(child_nodes[i], node))
+                                    print(f'NODE_{i}\n======\n{node.__str__()}')
+                            except KeyError:
+                                print('Key Error, abnormal text node')
                     except KeyError:
-                        print('Key Error, abnormal text node')
+                        self.skip = True
+                        return
 
         return node
+
 
 
 
