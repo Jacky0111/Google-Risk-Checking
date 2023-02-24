@@ -5,7 +5,7 @@ from time import sleep
 from pathlib import Path
 from datetime import datetime
 from urllib.parse import urlparse
-
+import xlsxwriter
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
@@ -86,8 +86,6 @@ class GRC:
         self.df1.to_excel(self.output_file)
 
     def specificNameWebsite(self):
-        self.df2['Node List'] = ''
-
         for index, row in self.df2.iterrows():
             self.node_list.clear()
             driver = GRC.setDriver()
@@ -95,10 +93,21 @@ class GRC:
             user_file_path = GRC.setUserReferenceFileName(str(date_time), str(row['Alert ID']), str(row['No.']))
             dev_file_path = GRC.setFolderName(row['URL'], str(date_time), str(row['Alert ID']), str(row['No.']))
             path_list = [user_file_path, dev_file_path]
-            self.getJavaScript(driver, row['URL'], path_list)
-            text_content = self.Vips(path_list)
-            self.df2.loc[index, 'Text Content'] = text_content
 
+            self.getJavaScript(driver, row['URL'], path_list)
+
+            # Store text content from the website
+            self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
+
+            # Store screenshot path from the website to excel as hyperlink format
+            writer = pd.ExcelWriter(self.output_file, engine='xlsxwriter')
+            self.df2.to_excel(writer, index=False)
+            # workbook = writer.book
+            worksheet = writer.sheets['Sheet1']
+
+            self.df2.loc[index, 'Screenshot Path'] = path_list[0] + '.jpeg'
+            for i, path in enumerate(self.df2['Screenshot Path']):
+                worksheet.write_url(i + 1, 1, path)
             break
 
         self.df2.to_csv('see.csv', index=False)
@@ -152,7 +161,7 @@ class GRC:
     @param parentNode 
     @return node
     '''
-    def convertToDomTree(self, obj, parentNode=None):
+    def convertToDomTree(self, obj, parent_node=None):
         if isinstance(obj, str):
             # Use json lib to load our json string
             json_obj = json.loads(obj)
@@ -173,7 +182,7 @@ class GRC:
                 node.setVisualCues(visual_cues)
         # Text Node (Free Text)
         elif node_type == 3:
-            node.createTextNode(json_obj['nodeValue'], parentNode)
+            node.createTextNode(json_obj['nodeValue'], parent_node)
             if node.parent_node is not None:
                 visual_cues = node.parent_node.visual_cues
                 if visual_cues is not None:
@@ -198,13 +207,9 @@ class GRC:
                             except KeyError:
                                 print('Key Error, abnormal text node')
                     except KeyError:
-                        self.skip = True
                         return
 
         return node
-
-
-
 
     @staticmethod
     def extractHitNameResults(driver, row):
