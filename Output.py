@@ -102,27 +102,29 @@ class Output:
                     if len(box.nodeValue.split()) < 10:
                         continue
                     content += box.nodeValue + ' '
-        news_items = {'Content': content}
-        news.append(news_items)
 
-        current = pd.DataFrame(news)
-        print(current.tail(10))
-        print("Shape    : ", current.shape)
-
-        try:
-            before = pd.read_csv('News.csv')
-            print(before.tail(10))
-            print("Shape    : ", before.shape)
-            data = pd.concat([before, current])
-        except FileNotFoundError:
-            data = current
-        data.drop_duplicates(inplace=True)
-        data.to_csv('News.csv', index=False)
-
-        print("Rows     : ", data.shape[0])
-        print("Columns  : ", data.shape[1])
-        print("Shape    : ", data.shape)
-        print("Features : ", data.columns.tolist())
+        return content
+        # news_items = {'Content': content}
+        # news.append(news_items)
+        #
+        # current = pd.DataFrame(news)
+        # print(current.tail(10))
+        # print("Shape    : ", current.shape)
+        #
+        # try:
+        #     before = pd.read_csv('News.csv')
+        #     print(before.tail(10))
+        #     print("Shape    : ", before.shape)
+        #     data = pd.concat([before, current])
+        # except FileNotFoundError:
+        #     data = current
+        # data.drop_duplicates(inplace=True)
+        # data.to_csv('News.csv', index=False)
+        #
+        # print("Rows     : ", data.shape[0])
+        # print("Columns  : ", data.shape[1])
+        # print("Shape    : ", data.shape)
+        # print("Features : ", data.columns.tolist())
 
     @staticmethod
     def weightOutput(sep_list, file_name, condition, i):
