@@ -96,8 +96,12 @@ class GRC:
             dev_file_path = GRC.setFolderName(row['URL'], str(date_time), str(row['Alert ID']), str(row['No.']))
             path_list = [user_file_path, dev_file_path]
             self.getJavaScript(driver, row['URL'], path_list)
-            self.Vips(path_list)
+            text_content = self.Vips(path_list)
+            self.df2.loc[index, 'Text Content'] = text_content
+
             break
+
+        self.df2.to_csv('see.csv', index=False)
 
     def Vips(self, path_list):
         print('Step 1: Visual Block Extraction---------------------------------------------------------------')
@@ -107,10 +111,10 @@ class GRC:
 
         print(f'Number of Block List: {len(block_list)}')
         self.output.blockOutput(block_list, path_list[1])
-        # Output.textOutput(block_list, self.url)
+        content = Output.textOutput(block_list)
 
         print('---------------------------------------------Done---------------------------------------------')
-
+        return content
 
     '''
     Retrieve Java Script from the web page
