@@ -4,8 +4,9 @@ import pandas as pd
 from time import sleep
 from pathlib import Path
 from datetime import datetime
+from openpyxl import load_workbook
 from urllib.parse import urlparse
-import xlsxwriter
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
@@ -39,7 +40,7 @@ class GRC:
 
     def runner(self):
         # # Step 1: Google boolean search hit name and store the URL to new output file.
-        # self.readExcelCSV(self.input_file)
+        # self.readExcel(self.input_file)
         # self.extractEngName()
         # self.generateLink()
         # self.googleSearchHitName()
@@ -100,17 +101,25 @@ class GRC:
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            writer = pd.ExcelWriter(self.output_file, engine='xlsxwriter')
-            self.df2.to_excel(writer, index=False)
-            # workbook = writer.book
-            worksheet = writer.sheets['Sheet1']
+            wb = load_workbook(self.output_file)
+            ws1 = wb["Sheet1"]
+            link = 'file:\\\\' + path_list[0] + '.jpeg'
 
-            self.df2.loc[index, 'Screenshot Path'] = path_list[0] + '.jpeg'
-            for i, path in enumerate(self.df2['Screenshot Path']):
-                worksheet.write_url(i + 1, 1, path)
+            ws1.cell(row=index, column=self.df2.columns.get_loc('Screenshot Path')).hyperlink = link
+            ws1.cell(row=index, column=self.df2.columns.get_loc('Screenshot Path')).style = "Hyperlink"
+
+            wb.save(self.output_file)
+            # writer = pd.ExcelWriter(self.output_file, engine='xlsxwriter')
+            # self.df2.to_excel(writer, index=False)
+            # worksheet = writer.sheets['Sheet1']
+            # self.df2.loc[index, 'Screenshot Path'] = 'file:\\\\' + path_list[0] + '.jpeg'
+            # self.df2.loc[index, 'Screenshot Path'] = f"=HYPERLINK('file:\\\\{path_list[0]}.jpeg', 'hello)"
+
+            # worksheet.write_url(index, self.df2.columns.get_loc('Screenshot Path'), path_list[0] + '.jpeg')
+
             break
 
-        self.df2.to_csv('see.csv', index=False)
+        self.df2.to_excel('see.xlsx', index=False)
 
     def Vips(self, path_list):
         print('Step 1: Visual Block Extraction---------------------------------------------------------------')
@@ -151,7 +160,6 @@ class GRC:
 
         driver.close()
         driver.quit()
-        print('close')
 
         self.convertToDomTree(x)
 
