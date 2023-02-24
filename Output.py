@@ -98,10 +98,10 @@ class Output:
 
         for block in block_list:
             for box in block.boxes:
-                if box.nodeType == 3 and box.parentNode.nodeName == "p":
-                    if len(box.nodeValue.split()) < 10:
+                if box.node_type == 3 and box.parent_node.node_name == "p":
+                    if len(box.node_value.split()) < 10:
                         continue
-                    content += box.nodeValue + ' '
+                    content += box.node_value + ' '
 
         return content
         # news_items = {'Content': content}
