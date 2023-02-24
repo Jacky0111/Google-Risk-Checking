@@ -14,7 +14,7 @@ class Output:
     @param screenshot_path
     '''''
     @staticmethod
-    def screenshotImage(browser, default_width, default_height, screenshot_path):
+    def screenshotImage(browser, default_width, default_height, path_list):
         # Set window dimension
         print('-------------------------------------Set Window Dimension-------------------------------------')
         browser.set_window_size(default_width, default_height)
@@ -22,9 +22,10 @@ class Output:
 
         # Get screenshot
         print('----------------------------------------Get Screenshot----------------------------------------')
-        parent_dir = Path(screenshot_path).parent
-        os.makedirs(parent_dir, exist_ok=True)
-        browser.save_screenshot(f'{screenshot_path}.png')
+        for screenshot_path in path_list:
+            parent_dir = Path(screenshot_path).parent
+            os.makedirs(parent_dir, exist_ok=True)
+            browser.save_screenshot(f'{screenshot_path}.jpeg')
 
     '''
     Draw the blocks.
@@ -36,7 +37,7 @@ class Output:
     def blockOutput(block_list, file_name, i=1):
         print('------------------------------------------Draw Block------------------------------------------')
 
-        img = cv2.imread(f'{file_name}.png')
+        img = cv2.imread(f'{file_name}.jpeg')
         red = (0, 0, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -61,7 +62,7 @@ class Output:
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
                 img = cv2.putText(img, str(block.identity), (coordinate[0], coordinate[3]), font, 0.5, red, 1)
-        path = f'{file_name}_Block_{str(i)}.png'
+        path = f'{file_name}_Block_{str(i)}.jpeg'
         cv2.imwrite(path, img)
 
     '''
