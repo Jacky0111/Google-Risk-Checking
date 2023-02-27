@@ -39,15 +39,15 @@ class GRC:
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     def runner(self):
-        # Step 1: Google boolean search hit name and store the URL to new output file.
-        self.readExcel(self.input_file)
-        self.extractEngName()
-        self.generateLink()
-        self.googleSearchHitName()
+        # # Step 1: Google boolean search hit name and store the URL to new output file.
+        # self.readExcel(self.input_file)
+        # self.extractEngName()
+        # self.generateLink()
+        # self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
-        # self.readExcel(self.output_file)
-        # self.specificNameWebsite()
+        self.readExcel(self.output_file)
+        self.specificNameWebsite()
 
     def readExcel(self, file):
         try:
@@ -102,28 +102,9 @@ class GRC:
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            wb = load_workbook(self.output_file)
-            ws1 = wb["Sheet1"]
-            link = 'file:\\\\' + path_list[0] + '.jpeg'
-            print(f'link: {link}')
-            print(self.df2.columns)
-            try:
-                ws1.cell(row=index+1, column=self.df2.columns.get_loc('Screenshot Path')+1).hyperlink = link
-                ws1.cell(row=index+1, column=self.df2.columns.get_loc('Screenshot Path')+1).style = "Hyperlink"
-            except KeyError:
-                self.df2['Screenshot Path'] = ''
-                ws1.cell(row=index+1, column=self.df2.columns.get_loc('Screenshot Path')+1).hyperlink = link
-                ws1.cell(row=index+1, column=self.df2.columns.get_loc('Screenshot Path') + 1).style = "Hyperlink"
-
-            print(self.df2.columns)
-            wb.save(self.output_file)
-            # writer = pd.ExcelWriter(self.output_file, engine='xlsxwriter')
-            # self.df2.to_excel(writer, index=False)
-            # worksheet = writer.sheets['Sheet1']
-            # self.df2.loc[index, 'Screenshot Path'] = 'file:\\\\' + path_list[0] + '.jpeg'
-            # self.df2.loc[index, 'Screenshot Path'] = f"=HYPERLINK('file:\\\\{path_list[0]}.jpeg', 'hello)"
-
-            # worksheet.write_url(index, self.df2.columns.get_loc('Screenshot Path'), path_list[0] + '.jpeg')
+            path_link = 'file:\\\\' + path_list[0] + '.jpeg'
+            self.df2.loc[index, 'Screenshot Path'] = path_link
+            print(f'link: {path_link}')
 
             break
 
