@@ -4,10 +4,10 @@ import pandas as pd
 from time import sleep
 from pathlib import Path
 from datetime import datetime
-from openpyxl import load_workbook
 from urllib.parse import urlparse
 
 from selenium import webdriver
+from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -96,17 +96,26 @@ class GRC:
             dev_file_path = GRC.setFolderName(row['URL'], str(date_time), str(row['Alert ID']), str(row['No.']))
             path_list = [user_file_path, dev_file_path]
 
-            self.getJavaScript(driver, row['URL'], path_list)
+            try:
+                self.getJavaScript(driver, row['URL'], path_list)
+            except TimeoutException:
+                continue
 
             # Store text content from the website
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            path_link = 'file:\\\\' + path_list[0] + '.jpeg'
+            path_link = 'file://' + path_list[0] + '.jpeg'
             self.df2.loc[index, 'Screenshot Path'] = path_link
-            print(f'link: {path_link}')
 
-            break
+            # Check if keyword exists in the content column
+            self.df2['Text Content'] = self.df2['Text Content'].astype(str)
+            self.df2['Match'] = self.df2.apply(lambda x: x['Hit Name'] in x['Text Content'], axis=1)
+
+            self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
+
+            if index == 19:
+                break
 
         self.df2.to_excel('see.xlsx', index=False)
 
@@ -127,6 +136,8 @@ class GRC:
     Retrieve Java Script from the web page
     '''
     def getJavaScript(self, driver, url, path_list):
+        driver.set_page_load_timeout(30)  # Set the timeout to 30 seconds
+
         driver.get(url)
         sleep(5)
 
@@ -207,6 +218,17 @@ class GRC:
                         return
 
         return node
+
+    def keywordsChecking(self, content):
+        # Check if any keyword is in content
+        matching = [k for k in self.keywords if k in content.lower()]
+
+        # If there are any matching keywords, join them with comma and return
+        if matching:
+            return ', '.join(matching)
+        # Return empty string otherwise
+        else:
+            return ''
 
     @staticmethod
     def extractHitNameResults(driver, row):
