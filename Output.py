@@ -25,7 +25,7 @@ class Output:
         for screenshot_path in path_list:
             parent_dir = Path(screenshot_path).parent
             os.makedirs(parent_dir, exist_ok=True)
-            browser.save_screenshot(f'{screenshot_path}.jpeg')
+            browser.save_screenshot(f'{screenshot_path}.png')
 
     '''
     Draw the blocks.
@@ -37,7 +37,7 @@ class Output:
     def blockOutput(block_list, file_name, i=1):
         print('------------------------------------------Draw Block------------------------------------------')
 
-        img = cv2.imread(f'{file_name}.jpeg')
+        img = cv2.imread(f'{file_name}.png')
         red = (0, 0, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -62,7 +62,7 @@ class Output:
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
                 img = cv2.putText(img, str(block.identity), (coordinate[0], coordinate[3]), font, 0.5, red, 1)
-        path = f'{file_name}_Block_{str(i)}.jpeg'
+        path = f'{file_name}_Block_{str(i)}.png'
         cv2.imwrite(path, img)
 
     '''
