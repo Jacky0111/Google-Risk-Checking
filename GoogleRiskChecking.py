@@ -115,9 +115,9 @@ class GRC:
         for index, row in self.df2.iterrows():
             self.node_list.clear()
             driver = GRC.setDriver()
-            date_time = datetime.now().strftime("%H%M-%d-%b-%Y")
-            user_file_path = GRC.setUserReferenceFileName(str(date_time), str(row['Alert ID']), str(row['No.']))
-            dev_file_path = GRC.setFolderName(row['URL'], str(date_time), str(row['Alert ID']), str(row['No.']))
+            date_time = datetime.now().strftime("%Y%m%d-%H%M")
+            user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(date_time))
+            dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(date_time))
             path_list = [user_file_path, dev_file_path]
 
             try:
@@ -132,10 +132,11 @@ class GRC:
             path_link = 'file://' + path_list[0] + '.png'
             self.df2.loc[index, 'Screenshot Path'] = path_link
 
-            # Check if keyword exists in the content column
+            # Check if name exists in the content column
             self.df2['Text Content'] = self.df2['Text Content'].astype(str)
             self.df2['Match'] = self.df2.apply(lambda x: x['Hit Name'] in x['Text Content'], axis=1)
 
+            # Check if keyword exists in the content column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
         self.df2.to_excel(self.final_file, index=False)
@@ -277,6 +278,9 @@ class GRC:
 
         return pd.DataFrame(table_items_list)
 
+    '''
+    Set driver
+    '''
     @staticmethod
     def setDriver():
         options = Options()
@@ -291,16 +295,16 @@ class GRC:
     Create a folder at C drive where every use can access from their pc and save screenshot to the folder
     '''
     @staticmethod
-    def setUserReferenceFileName(dt, alert_id, number):
-        return 'C:/Screenshots/' + dt + '_' + alert_id + '_' + number
+    def setUserReferenceFileName(alert_id, number, dt):
+        return 'C:/Screenshots/' + alert_id + '_' + number + '_' + dt
 
     '''
     Set the folder name and make directory
     '''
     @staticmethod
-    def setFolderName(url, dt, alert_id, number):
+    def setFolderName(url, alert_id, number, dt):
         parse_url = urlparse(url)
-        path = r'Screenshots/' + dt + '_' + alert_id + '_' + number + '/'
+        path = r'Screenshots/' + alert_id + '_' + number + '_' + dt + '/'
         os.makedirs(path)
         return path + parse_url.netloc
 
