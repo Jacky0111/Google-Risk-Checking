@@ -1,13 +1,16 @@
 import os
 import json
+import openpyxl
 import pandas as pd
 from time import sleep
 from pathlib import Path
 from datetime import datetime
-from openpyxl import load_workbook
 from urllib.parse import urlparse
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 from selenium import webdriver
+from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -21,11 +24,14 @@ class GRC:
     PDoC = 6  # Permitted Degree of Coherence
     url = None
     output = None
-    input_file = None
-    output_file = None
     window_width = None
     window_height = None
     current_date_time = None
+
+    # File path
+    input_file = None
+    output_file = None
+    final_file = None
 
     keywords = []
     node_list = []  # To store dom tree
@@ -36,6 +42,7 @@ class GRC:
     def __init__(self, input_file):
         self.input_file = input_file
         self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.xlsx"
+        self.final_file = f"{Path(self.output_file).stem.replace(' ', '')}_Final.xlsx"
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     def runner(self):
@@ -48,6 +55,23 @@ class GRC:
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcel(self.output_file)
         self.specificNameWebsite()
+
+        # Step 3: Create clickable path text
+        self.clickablePathText()
+
+    def clickablePathText(self):
+        # Load the workbook and worksheet
+        workbook = openpyxl.load_workbook(self.final_file)
+        worksheet = workbook.active
+
+        # Loop through the rows of the worksheet and create a hyperlink for each file path
+        for row in range(2, worksheet.max_row + 1):
+            file_path = worksheet.cell(row=row, column=10).value
+            hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=file_path)
+            worksheet.cell(row=row, column=10).hyperlink = hyperlink
+
+        # Save the changes to the Excel file
+        workbook.save(self.final_file)
 
     def readExcel(self, file):
         try:
@@ -96,19 +120,25 @@ class GRC:
             dev_file_path = GRC.setFolderName(row['URL'], str(date_time), str(row['Alert ID']), str(row['No.']))
             path_list = [user_file_path, dev_file_path]
 
-            self.getJavaScript(driver, row['URL'], path_list)
+            try:
+                self.getJavaScript(driver, row['URL'], path_list)
+            except TimeoutException:
+                continue
 
             # Store text content from the website
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            path_link = 'file:\\\\' + path_list[0] + '.jpeg'
+            path_link = 'file://' + path_list[0] + '.jpeg'
             self.df2.loc[index, 'Screenshot Path'] = path_link
-            print(f'link: {path_link}')
 
-            break
+            # Check if keyword exists in the content column
+            self.df2['Text Content'] = self.df2['Text Content'].astype(str)
+            self.df2['Match'] = self.df2.apply(lambda x: x['Hit Name'] in x['Text Content'], axis=1)
 
-        self.df2.to_excel('see.xlsx', index=False)
+            self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
+
+        self.df2.to_excel(self.final_file, index=False)
 
     def Vips(self, path_list):
         print('Step 1: Visual Block Extraction---------------------------------------------------------------')
@@ -207,6 +237,17 @@ class GRC:
                         return
 
         return node
+
+    def keywordsChecking(self, content):
+        # Check if any keyword is in content
+        matching = [k for k in self.keywords if k in content.lower()]
+
+        # If there are any matching keywords, join them with comma and return
+        if matching:
+            return ', '.join(matching)
+        # Return empty string otherwise
+        else:
+            return ''
 
     @staticmethod
     def extractHitNameResults(driver, row):
