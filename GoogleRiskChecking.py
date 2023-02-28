@@ -129,7 +129,7 @@ class GRC:
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            path_link = 'file://' + path_list[0] + '.jpeg'
+            path_link = 'file://' + path_list[0] + '.png'
             self.df2.loc[index, 'Screenshot Path'] = path_link
 
             # Check if keyword exists in the content column
@@ -239,15 +239,17 @@ class GRC:
         return node
 
     def keywordsChecking(self, content):
-        # Check if any keyword is in content
-        matching = [k for k in self.keywords if k in content.lower()]
+        # Check if content is a string
+        if isinstance(content, str):
+            # Check if any keyword is in content
+            matching = [k for k in self.keywords if k in content.lower()]
 
-        # If there are any matching keywords, join them with comma and return
-        if matching:
-            return ', '.join(matching)
-        # Return empty string otherwise
-        else:
-            return ''
+            # If there are any matching keywords, join them with comma and return
+            if matching:
+                return ', '.join(matching)
+            # Return empty string otherwise
+            else:
+                return ''
 
     @staticmethod
     def extractHitNameResults(driver, row):
