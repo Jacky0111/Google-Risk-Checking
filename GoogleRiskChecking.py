@@ -1,13 +1,15 @@
 import os
 import json
+import spacy
+import itertools
 import openpyxl
 import pandas as pd
 from time import sleep
 from pathlib import Path
+from fuzzywuzzy import fuzz
 from datetime import datetime
 from urllib.parse import urlparse
-from openpyxl import load_workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Font, Color
 
 from selenium import webdriver
 from selenium.common import TimeoutException
@@ -59,20 +61,6 @@ class GRC:
         # Step 3: Create clickable path text
         self.clickablePathText()
 
-    def clickablePathText(self):
-        # Load the workbook and worksheet
-        workbook = openpyxl.load_workbook(self.final_file)
-        worksheet = workbook.active
-
-        # Loop through the rows of the worksheet and create a hyperlink for each file path
-        for row in range(2, worksheet.max_row + 1):
-            file_path = worksheet.cell(row=row, column=10).value
-            hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=file_path)
-            worksheet.cell(row=row, column=10).hyperlink = hyperlink
-
-        # Save the changes to the Excel file
-        workbook.save(self.final_file)
-
     def readExcel(self, file):
         try:
             df_dict = pd.read_excel(file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
@@ -122,24 +110,60 @@ class GRC:
 
             try:
                 self.getJavaScript(driver, row['URL'], path_list)
-            except TimeoutException:
+            except:
                 continue
 
             # Store text content from the website
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
-            path_link = 'file://' + path_list[0] + '.png'
+            path_link = path_list[0] + '.png'
             self.df2.loc[index, 'Screenshot Path'] = path_link
 
             # Check if name exists in the content column
             self.df2['Text Content'] = self.df2['Text Content'].astype(str)
-            self.df2['Match'] = self.df2.apply(lambda x: x['Hit Name'] in x['Text Content'], axis=1)
+            self.df2['Match'] = self.df2.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
 
             # Check if keyword exists in the content column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
+            if index == 2:
+                break
+
         self.df2.to_excel(self.final_file, index=False)
+
+    @staticmethod
+    def matchName(person_name, essay):
+        nlp = spacy.load('en_core_web_sm')
+
+        # Process the essay text using spaCy
+        doc = nlp(essay)
+
+        # Split the person name into individual tokens
+        person_name_tokens = person_name.split()
+
+        # Find all permutations of the person name
+        person_name_permutations = [
+            " ".join(permutation)
+            for r in range(1, len(person_name_tokens) + 1)
+            for permutation in itertools.permutations(person_name_tokens, r)
+        ]
+
+        # Iterate over the words and phrases in the document
+        for i, token in enumerate(doc):
+            # Check if the token matches the first token of any permutation of the person name
+            for permutation in person_name_permutations:
+                # Check if the remaining tokens match the subsequent tokens of the permutation
+                j = 0
+                while i + j < len(doc) and j < len(permutation.split()):
+                    distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
+                    if distance < 65:
+                        break
+                    j += 1
+                # If all tokens match, print the match and break the loop to avoid duplicate matches
+                if j == len(permutation.split()):
+                    return True
+        return False
 
     def Vips(self, path_list):
         print('Step 1: Visual Block Extraction---------------------------------------------------------------')
@@ -253,6 +277,24 @@ class GRC:
             # Return empty string otherwise
             else:
                 return ''
+
+    def clickablePathText(self):
+        # Load the workbook and worksheet
+        workbook = openpyxl.load_workbook(self.final_file)
+        worksheet = workbook.active
+
+        # Loop through the rows of the worksheet and create a hyperlink for each file path
+        for row in range(2, worksheet.max_row + 1):
+            file_path = worksheet.cell(row=row, column=10).value
+            hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=file_path)
+            worksheet.cell(row=row, column=10).hyperlink = hyperlink
+
+            # set the font color and underline style for the cell
+            font = Font(color=Color("0000EE"), underline='single')
+            worksheet.cell(row=row, column=10).font = font
+
+        # Save the changes to the Excel file
+        workbook.save(self.final_file)
 
     @staticmethod
     def extractHitNameResults(driver, row):
