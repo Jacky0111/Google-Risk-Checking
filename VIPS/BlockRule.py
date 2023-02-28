@@ -489,7 +489,7 @@ class BlockRule:
     @staticmethod
     def rule11(block):
         children = block.parent.children
-        index = children.row(block)
+        index = children.index(block)
         count = 0
 
         for i in range(index):

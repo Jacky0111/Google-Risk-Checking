@@ -157,6 +157,8 @@ class GRC:
     Retrieve Java Script from the web page
     '''
     def getJavaScript(self, driver, url, path_list):
+        driver.set_page_load_timeout(30)  # Set the timeout to 30 seconds
+
         driver.get(url)
         sleep(5)
 
