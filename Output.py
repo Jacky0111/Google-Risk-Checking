@@ -81,28 +81,6 @@ class Output:
         path = f'{file_name}_Block_{str(i)}.png'
         cv2.imwrite(path, img)
 
-
-    '''
-    Draw the horizontal and vertical separators.
-    @param sep_list
-    @param file_name
-    @param direction
-    @param i
-    '''
-    @staticmethod
-    def separatorOutput(sep_list, file_name, direction, i):
-        print('----------------------------------------Draw Separator----------------------------------------')
-
-        img = cv2.imread(f'{file_name}_Block_{str(i)}.png')
-        blue = (255, 0, 0)
-
-        for ele in sep_list:
-            start_point = (int(ele.x), int(ele.y))
-            end_point = (int(ele.x + ele.width), int(ele.y + ele.height))
-            img = cv2.rectangle(img, start_point, end_point, blue, -1)
-        path = f'{file_name}_{direction}_{str(i)}.png'
-        cv2.imwrite(path, img)
-
     '''
     Store the obtained news content into csv file and remove duplicates.
     @param block_list
@@ -110,27 +88,18 @@ class Output:
     @staticmethod
     def textOutput(block_list):
         print('-----------------------------------Store News Content to CSV ---------------------------------')
-        news = []
         content = ''
 
         for block in block_list:
             for box in block.boxes:
+                # Check if the box node type is text (i.e. 3) and the parent node is a <p> tag
                 if box.node_type == 3 and box.parent_node.node_name == "p":
+                    # Check if the length of the text in the box is less than 10
                     if len(box.node_value.split()) < 10:
                         continue
+                    # If the length is greater than or equal to 10, add the text to the content string
                     content += box.node_value + ' '
 
         return content
 
-    @staticmethod
-    def weightOutput(sep_list, file_name, condition, i):
-        print('------------------------------Store Separator Weight to Text File ----------------------------')
-        path = f'{file_name}_{condition}_{str(i)}.txt'
 
-        with open(path, 'w') as f:
-            for ele in sep_list:
-                f.write(str(ele.weight))
-                if ele == sep_list[-1]:
-                    f.write('.')
-                else:
-                    f.write(', ')
