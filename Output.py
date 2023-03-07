@@ -11,7 +11,7 @@ class Output:
     @param browser
     @param default_width
     @param default_height
-    @param screenshot_path
+    @param path_list
     '''''
     @staticmethod
     def screenshotImage(browser, default_width, default_height, path_list):
@@ -23,8 +23,10 @@ class Output:
         # Get screenshot
         print('----------------------------------------Get Screenshot----------------------------------------')
         for screenshot_path in path_list:
+            # Create directory for the screenshot if it doesn't exist
             parent_dir = Path(screenshot_path).parent
             os.makedirs(parent_dir, exist_ok=True)
+            # Save screenshot with .png extension
             browser.save_screenshot(f'{screenshot_path}.png')
 
     '''
@@ -33,37 +35,52 @@ class Output:
     @param file_name
     @param i
     '''
+
     @staticmethod
     def blockOutput(block_list, file_name, i=1):
+        # Print statement indicating the start of block drawing
         print('------------------------------------------Draw Block------------------------------------------')
 
+        # Load image using OpenCV
         img = cv2.imread(f'{file_name}.png')
+        # Define the color red in BGR format
         red = (0, 0, 255)
+        # Define the font to use for text
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         for block in block_list:
+            # Check if the block is a visual block (i.e. has a bounding box)
             if block.isVisualBlock:
+                # Define the coordinates of the bounding box
                 coordinate = (int(block.x), int(block.y), int(block.x + block.width), int(block.y + block.height))
 
+                # Draw the top horizontal line of the bounding box
                 start_point = (coordinate[0], coordinate[1])
                 end_point = (coordinate[2], coordinate[1])
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
+                # Draw the right vertical line of the bounding box
                 start_point = (coordinate[2], coordinate[1])
                 end_point = (coordinate[2], coordinate[3])
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
+                # Draw the bottom horizontal line of the bounding box
                 start_point = (coordinate[2], coordinate[3])
                 end_point = (coordinate[0], coordinate[3])
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
+                # Draw the left vertical line of the bounding box
                 start_point = (coordinate[0], coordinate[3])
                 end_point = (coordinate[0], coordinate[1])
                 img = cv2.line(img, start_point, end_point, red, thickness=1)
 
+                # Draw the identity of the block as text
                 img = cv2.putText(img, str(block.identity), (coordinate[0], coordinate[3]), font, 0.5, red, 1)
+
+        # Define the path to save the output image and write the image using OpenCV
         path = f'{file_name}_Block_{str(i)}.png'
         cv2.imwrite(path, img)
+
 
     '''
     Draw the horizontal and vertical separators.
@@ -104,27 +121,6 @@ class Output:
                     content += box.node_value + ' '
 
         return content
-        # news_items = {'Content': content}
-        # news.append(news_items)
-        #
-        # current = pd.DataFrame(news)
-        # print(current.tail(10))
-        # print("Shape    : ", current.shape)
-        #
-        # try:
-        #     before = pd.read_csv('News.csv')
-        #     print(before.tail(10))
-        #     print("Shape    : ", before.shape)
-        #     data = pd.concat([before, current])
-        # except FileNotFoundError:
-        #     data = current
-        # data.drop_duplicates(inplace=True)
-        # data.to_csv('News.csv', index=False)
-        #
-        # print("Rows     : ", data.shape[0])
-        # print("Columns  : ", data.shape[1])
-        # print("Shape    : ", data.shape)
-        # print("Features : ", data.columns.tolist())
 
     @staticmethod
     def weightOutput(sep_list, file_name, condition, i):
