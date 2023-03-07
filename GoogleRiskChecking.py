@@ -76,8 +76,8 @@ class GRC:
             self.df_ori = df_dict['Sheet1']
             self.keywords = df_dict['Keywords List']['Keywords'].tolist()
         except ValueError:
-            # If the read_excel function raises a ValueError, it means the file does not have Sheet1 and Keywords List sheets
-            # In this case, read the file as a single dataframe
+            # If the read_excel function raises a ValueError, it means the file does not have Sheet1 and Keywords
+            # List sheets In this case, read the file as a single dataframe
             self.df2 = pd.read_excel(file)
 
     '''
