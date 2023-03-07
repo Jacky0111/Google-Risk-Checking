@@ -46,6 +46,9 @@ class GRC:
         self.output_file = f"{Path(self.url_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
+    '''
+    Execution function for Google Risk Checking
+    '''
     def runner(self):
         # # Step 1: Google boolean search hit name and store the URL to new output file.
         # self.readExcel(self.input_file)
