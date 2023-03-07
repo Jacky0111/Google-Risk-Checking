@@ -47,11 +47,11 @@ class GRC:
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     def runner(self):
-        # Step 1: Google boolean search hit name and store the URL to new output file.
-        self.readExcel(self.input_file)
-        self.extractEngName()
-        self.generateLink()
-        self.googleSearchHitName()
+        # # Step 1: Google boolean search hit name and store the URL to new output file.
+        # self.readExcel(self.input_file)
+        # self.extractEngName()
+        # self.generateLink()
+        # self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcel(self.url_file)
@@ -270,15 +270,19 @@ class GRC:
     def keywordsChecking(self, content):
         # Check if content is a string
         if isinstance(content, str):
-            # Check if any keyword is in content
-            matching = [k for k in self.keywords if k in content.lower()]
+            content_str = content
+        else:
+            content_str = str(content)
 
-            # If there are any matching keywords, join them with comma and return
-            if matching:
-                return ', '.join(matching)
-            # Return empty string otherwise
-            else:
-                return ''
+        # Check if any keyword is in content
+        matching = [k for k in self.keywords if k in content_str.lower()]
+
+        # If there are any matching keywords, join them with comma and return
+        if matching:
+            return ', '.join(matching)
+        # Return empty string otherwise
+        else:
+            return ''
 
     def clickablePathText(self):
         # Load the workbook and worksheet
