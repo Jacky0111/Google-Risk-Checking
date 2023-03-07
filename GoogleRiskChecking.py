@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 from openpyxl.styles import Font, Color
 
 from selenium import webdriver
-from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
@@ -32,8 +31,8 @@ class GRC:
 
     # File path
     input_file = None
+    url_file = None
     output_file = None
-    final_file = None
 
     keywords = []
     node_list = []  # To store dom tree
@@ -43,25 +42,26 @@ class GRC:
 
     def __init__(self, input_file):
         self.input_file = input_file
-        self.output_file = f"{Path(self.input_file).stem.replace(' ', '')}_OutputFile.xlsx"
-        self.final_file = f"{Path(self.output_file).stem.replace(' ', '')}_Final.xlsx"
+        self.url_file = f"{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
+        self.output_file = f"{Path(self.url_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     def runner(self):
-        # # Step 1: Google boolean search hit name and store the URL to new output file.
-        # self.readExcel(self.input_file)
-        # self.extractEngName()
-        # self.generateLink()
-        # self.googleSearchHitName()
+        # Step 1: Google boolean search hit name and store the URL to new output file.
+        self.readExcel(self.input_file)
+        self.extractEngName()
+        self.generateLink()
+        self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
-        self.readExcel(self.output_file)
+        self.readExcel(self.url_file)
         self.specificNameWebsite()
 
         # Step 3: Create clickable path text
         self.clickablePathText()
 
     def readExcel(self, file):
+        print('---------------------------------------Read Excel File----------------------------------------')
         try:
             df_dict = pd.read_excel(file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
             self.df_ori = df_dict['Sheet1']
@@ -73,6 +73,7 @@ class GRC:
     Extract english name from Hit Name
     '''
     def extractEngName(self):
+        print('--------------------------------------Extract Hit Name----------------------------------------')
         self.df_ori['EN_HIT_NAME'] = self.df_ori['Hit Name'].str.replace(r'[^a-zA-Z\s]', '', regex=True).str.strip()
 
     '''
@@ -86,6 +87,7 @@ class GRC:
     Boolean search the hit name by using Chrome browser
     '''
     def googleSearchHitName(self):
+        print('-------------------------------------Google Search Hit Name-----------------------------------')
         count = 0
 
         for index, row in self.df_ori.iterrows():
@@ -97,7 +99,7 @@ class GRC:
             self.df1 = pd.concat([self.df1, table_items])
             self.df1.apply(lambda x: print(x), axis=1)
 
-        self.df1.to_excel(self.output_file)
+        self.df1.to_excel(self.url_file)
 
     def specificNameWebsite(self):
         for index, row in self.df2.iterrows():
@@ -127,10 +129,10 @@ class GRC:
             # Check if keyword exists in the content column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
-            if index == 2:
-                break
+            # if index == 2:
+            #     break
 
-        self.df2.to_excel(self.final_file, index=False)
+        self.df2.to_excel(self.output_file, index=False)
 
     @staticmethod
     def matchName(person_name, essay):
@@ -280,7 +282,7 @@ class GRC:
 
     def clickablePathText(self):
         # Load the workbook and worksheet
-        workbook = openpyxl.load_workbook(self.final_file)
+        workbook = openpyxl.load_workbook(self.output_file)
         worksheet = workbook.active
 
         # Loop through the rows of the worksheet and create a hyperlink for each file path
@@ -294,7 +296,7 @@ class GRC:
             worksheet.cell(row=row, column=10).font = font
 
         # Save the changes to the Excel file
-        workbook.save(self.final_file)
+        workbook.save(self.output_file)
 
     @staticmethod
     def extractHitNameResults(driver, row):
