@@ -50,11 +50,11 @@ class GRC:
     Execution function for Google Risk Checking
     '''
     def runner(self):
-        # # Step 1: Google boolean search hit name and store the URL to new output file.
-        # self.readExcel(self.input_file)
-        # self.extractEngName()
-        # self.generateLink()
-        # self.googleSearchHitName()
+        # Step 1: Google boolean search hit name and store the URL to new output file.
+        self.readExcel(self.input_file)
+        self.extractEngName()
+        self.generateLink()
+        self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcel(self.url_file)
@@ -157,6 +157,9 @@ class GRC:
 
             # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
+
+            if index == 1:
+                break
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
@@ -314,18 +317,14 @@ class GRC:
     '''
     def keywordsChecking(self, content):
         # Check if content is a string
-        if isinstance(content, str):
-            content_str = content
-        else:
-            content_str = str(content)
+        if isinstance(content, float):
+            return ''
 
         # Check if any keyword is in content
-        matching = [k for k in self.keywords if k in content_str.lower()]
+        matching = [k.lower() for k in self.keywords if isinstance(k, str) and k.lower() in str(content).lower()]
 
-        # If there are any matching keywords, join them with comma and return
-        if matching:
+        if len(matching) > 0:
             return ', '.join(matching)
-        # Return empty string otherwise
         else:
             return ''
 
