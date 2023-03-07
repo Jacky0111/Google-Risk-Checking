@@ -1,7 +1,6 @@
 import os
 import cv2
 import time
-import pandas as pd
 from pathlib import Path
 
 
