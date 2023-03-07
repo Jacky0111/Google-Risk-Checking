@@ -60,13 +60,21 @@ class GRC:
         # Step 3: Create clickable path text
         self.clickablePathText()
 
+    '''
+    Read Excel file
+    @param file
+    '''
     def readExcel(self, file):
         print('---------------------------------------Read Excel File----------------------------------------')
         try:
+            # Read the Excel file into a dictionary of dataframes, with Sheet1 and Keywords List as keys
             df_dict = pd.read_excel(file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
+            # Extract the Sheet1 dataframe and the list of keywords from the Keywords List dataframe
             self.df_ori = df_dict['Sheet1']
             self.keywords = df_dict['Keywords List']['Keywords'].tolist()
         except ValueError:
+            # If the read_excel function raises a ValueError, it means the file does not have Sheet1 and Keywords List sheets
+            # In this case, read the file as a single dataframe
             self.df2 = pd.read_excel(file)
 
     '''
@@ -74,13 +82,18 @@ class GRC:
     '''
     def extractEngName(self):
         print('--------------------------------------Extract Hit Name----------------------------------------')
+        # Remove non-alphabetic characters and leading/trailing whitespace from the Hit Name column,
+        # and assign the result to a new column called `EN_HIT_NAME`
         self.df_ori['EN_HIT_NAME'] = self.df_ori['Hit Name'].str.replace(r'[^a-zA-Z\s]', '', regex=True).str.strip()
 
     '''
     Generate link by combine google search link with extracted english name
     '''
+
     def generateLink(self):
-        self.df_ori['URL'] = 'https://www.google.com/search?q=' + self.df_ori['EN_HIT_NAME'].str.replace(' ', '+') + \
+        # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each hit name
+        self.df_ori['URL'] = 'https://www.google.com/search?q=' + \
+                             self.df_ori['EN_HIT_NAME'].str.replace(' ', '+') + \
                              ' AND (~crime OR ~corruption OR ~money laundering OR ~bribe)'.replace(' ', '+')
 
     '''
@@ -91,19 +104,28 @@ class GRC:
         count = 0
 
         for index, row in self.df_ori.iterrows():
+            # Set up the Chrome driver
             driver = GRC.setDriver()
+            # Extract the search results for the current row's hit name
             table_items = GRC.extractHitNameResults(driver, row)
+            # Increment the index of the search results by the number of rows already processed
             table_items.index += 1 + count
-            count += table_items.shape[0]
-            table_items.index.name = 'No.'
+            # Add the search results to the concatenated DataFrame
             self.df1 = pd.concat([self.df1, table_items])
+            # Update the count of rows processed
+            count += table_items.shape[0]
+
+            # Print the current row being processed (for debugging purposes)
             self.df1.apply(lambda x: print(x), axis=1)
 
+        # Save the concatenated DataFrame to an Excel file
         self.df1.to_excel(self.url_file)
 
     def specificNameWebsite(self):
         for index, row in self.df2.iterrows():
             self.node_list.clear()
+
+            # Set up Selenium driver and file paths for user reference and development reference
             driver = GRC.setDriver()
             date_time = datetime.now().strftime("%Y%m%d-%H%M")
             user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(date_time))
@@ -111,27 +133,27 @@ class GRC:
             path_list = [user_file_path, dev_file_path]
 
             try:
+                # Get website content using Selenium driver and store in path_list
                 self.getJavaScript(driver, row['URL'], path_list)
             except:
+                # If there is an error, continue to next row
                 continue
 
-            # Store text content from the website
+            # Store text content from the website in `Text Content` column
             self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
             # Store screenshot path from the website to excel as hyperlink format
             path_link = path_list[0] + '.png'
             self.df2.loc[index, 'Screenshot Path'] = path_link
 
-            # Check if name exists in the content column
+            # Check if name exists in the content column and store result in `Match` column
             self.df2['Text Content'] = self.df2['Text Content'].astype(str)
             self.df2['Match'] = self.df2.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
 
-            # Check if keyword exists in the content column
+            # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
-            # if index == 2:
-            #     break
-
+        # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
 
     @staticmethod
@@ -167,6 +189,11 @@ class GRC:
                     return True
         return False
 
+    '''
+    This function performs visual block extraction on the website and extracts text content from the resulting block lists.
+    @param path_list
+    @return content
+    '''
     def Vips(self, path_list):
         print('Step 1: Visual Block Extraction---------------------------------------------------------------')
         vbe = VisualBlockExtraction()
@@ -182,33 +209,42 @@ class GRC:
 
     '''
     Retrieve Java Script from the web page
+    @param driver
+    @param url
+    @param path_list
     '''
-    def getJavaScript(self, driver, url, path_list):
-        driver.set_page_load_timeout(30)  # Set the timeout to 30 seconds
 
+    def getJavaScript(self, driver, url, path_list):
+        # Set the page load timeout to 30 seconds
+        driver.set_page_load_timeout(30)
+
+        # Load the webpage
         driver.get(url)
         sleep(5)
 
-        # Before closing the web server make sure get all the information required
+        # Get the webpage height and width and create an instance of the Output class
         self.window_width = 1920
         self.window_height = driver.execute_script('return document.body.parentNode.scrollHeight')
-
         self.output = Output()
+
+        # Take a screenshot of the webpage
         self.output.screenshotImage(driver, self.window_width, self.window_height, path_list)
 
-        # Read in DOM java script file as string
+        # Read in DOM javascript file as string
         file = open('DOM/dom.js', 'r')
         java_script = file.read()
 
         # Add additional javascript code to run our dom.js to JSON method
         java_script += '\nreturn JSON.stringify(toJSON(document.getElementsByTagName("BODY")[0]));'
 
-        # Run the javascript
+        # Run the javascript and convert the output to a DOM tree
         x = driver.execute_script(java_script)
 
+        # Close the driver
         driver.close()
         driver.quit()
 
+        # Convert the JSON string to a nested dictionary and store it in self.node_list
         self.convertToDomTree(x)
 
     '''
@@ -267,6 +303,10 @@ class GRC:
 
         return node
 
+    '''
+    Take a string as input, checks if any of the keywords provided in the self.keywords list are present in the input.
+    @return comma-separated string if matching is True, empty string otherwise.
+    '''
     def keywordsChecking(self, content):
         # Check if content is a string
         if isinstance(content, str):
@@ -284,6 +324,9 @@ class GRC:
         else:
             return ''
 
+    '''
+    Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific image.
+    '''
     def clickablePathText(self):
         # Load the workbook and worksheet
         workbook = openpyxl.load_workbook(self.output_file)
@@ -302,6 +345,12 @@ class GRC:
         # Save the changes to the Excel file
         workbook.save(self.output_file)
 
+    '''
+    Extract Hit Name results from the first page of Google Search
+    @param driver
+    @param row 
+    @return DataFrame
+    '''
     @staticmethod
     def extractHitNameResults(driver, row):
         alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[1:8]
@@ -309,6 +358,7 @@ class GRC:
         driver.get(url)
         sleep(5)
 
+        # Find search results by XPath
         search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
         # Create a list of dictionaries for each row in the search results
@@ -327,7 +377,8 @@ class GRC:
         return pd.DataFrame(table_items_list)
 
     '''
-    Set driver
+    Set Chrome driver
+    @return browser
     '''
     @staticmethod
     def setDriver():
@@ -341,6 +392,10 @@ class GRC:
 
     '''
     Create a folder at C drive where every use can access from their pc and save screenshot to the folder
+    @param alert_id
+    @param number 
+    @param dt
+    @return file path
     '''
     @staticmethod
     def setUserReferenceFileName(alert_id, number, dt):
@@ -348,6 +403,10 @@ class GRC:
 
     '''
     Set the folder name and make directory
+    @param alert_id
+    @param number 
+    @param dt
+    @return file path
     '''
     @staticmethod
     def setFolderName(url, alert_id, number, dt):
