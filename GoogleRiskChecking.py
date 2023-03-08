@@ -37,6 +37,8 @@ class GRC:
 
     keywords = []
     node_list = []  # To store dom tree
+    name_list = []
+
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
     df_ori = pd.DataFrame()
@@ -113,7 +115,7 @@ class GRC:
             # Set up the Chrome driver
             driver = GRC.setDriver()
             # Extract the search results for the current row's hit name
-            table_items = GRC.extractHitNameResults(driver, row)
+            table_items = self.extractHitNameResults(driver, row)
             # Increment the index of the search results by the number of rows already processed
             table_items.index += 1 + count
             count += table_items.shape[0]
@@ -374,28 +376,39 @@ class GRC:
     @param row 
     @return DataFrame
     '''
-    @staticmethod
-    def extractHitNameResults(driver, row):
+    def extractHitNameResults(self, driver, row):
         alert_id, hit_name, country, entry_cat, entry_sub_cat, ent_id, url = row[1:8]
 
-        driver.get(url)
-        sleep(5)
+        if hit_name in self.name_list:
+            table_items_list = [{'Alert ID': alert_id,
+                                 'Hit Name': hit_name,
+                                 'Country': country,
+                                 'Entry-category': entry_cat,
+                                 'Entry-subcategory': entry_sub_cat,
+                                 'Ent Id': ent_id,
+                                 'URL': 'DUPLICATE'
+                                 }]
+        else:
+            self.name_list.append(hit_name)
 
-        # Find search results by XPath
-        search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
+            driver.get(url)
+            sleep(5)
 
-        # Create a list of dictionaries for each row in the search results
-        table_items_list = [{'Alert ID': alert_id,
-                             'Hit Name': hit_name,
-                             'Country': country,
-                             'Entry-category': entry_cat,
-                             'Entry-subcategory': entry_sub_cat,
-                             'Ent Id': ent_id,
-                             'URL': link.get_attribute('href')
-                             } for link in search_results]
+            # Find search results by XPath
+            search_results = driver.find_elements(By.XPATH, "//div[contains(@class, 'yuRUbf')]/a")
 
-        driver.close()
-        driver.quit()
+            # Create a list of dictionaries for each row in the search results
+            table_items_list = [{'Alert ID': alert_id,
+                                 'Hit Name': hit_name,
+                                 'Country': country,
+                                 'Entry-category': entry_cat,
+                                 'Entry-subcategory': entry_sub_cat,
+                                 'Ent Id': ent_id,
+                                 'URL': link.get_attribute('href')
+                                 } for link in search_results]
+
+            driver.close()
+            driver.quit()
 
         return pd.DataFrame(table_items_list)
 
