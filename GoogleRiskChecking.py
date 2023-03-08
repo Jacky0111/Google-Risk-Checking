@@ -230,7 +230,7 @@ class GRC:
         self.output.blockOutput(block_list, path_list[1])
         content = Output.textOutput(block_list)
 
-        print('---------------------------------------------Done---------------------------------------------')
+        print('---------------------------------------------Done---------------------------------------------\n\n')
         return content
 
     '''
