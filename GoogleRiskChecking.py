@@ -187,21 +187,33 @@ class GRC:
             for permutation in itertools.permutations(person_name_tokens, r)
         ]
 
-        # Iterate over the words and phrases in the document
-        for i, token in enumerate(doc):
-            # Check if the token matches the first token of any permutation of the person name
-            for permutation in person_name_permutations:
-                # Check if the remaining tokens match the subsequent tokens of the permutation
-                j = 0
-                while i + j < len(doc) and j < len(permutation.split()):
-                    distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
-                    if distance < 65:
-                        break
-                    j += 1
-                # If all tokens match, print the match and break the loop to avoid duplicate matches
-                if j == len(permutation.split()):
-                    return True
+        # Iterate over the entities in the sentence and check if any of them are a person
+        for entity in doc.ents:
+            if entity.label_ == 'PERSON':
+                person_name = entity.text
+                # Check if the person name matches any permutation of the provided name
+                for permutation in person_name_permutations:
+                    distance = fuzz.ratio(person_name.lower(), permutation.lower())
+                    if distance >= 65:
+                        print('Match found:', person_name)
+                        return True
         return False
+
+        # # Iterate over the words and phrases in the document
+        # for i, token in enumerate(doc):
+        #     # Check if the token matches the first token of any permutation of the person name
+        #     for permutation in person_name_permutations:
+        #         # Check if the remaining tokens match the subsequent tokens of the permutation
+        #         j = 0
+        #         while i + j < len(doc) and j < len(permutation.split()):
+        #             distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
+        #             if distance < 65:
+        #                 break
+        #             j += 1
+        #         # If all tokens match, print the match and break the loop to avoid duplicate matches
+        #         if j == len(permutation.split()):
+        #             return True
+        # return False
 
     '''
     This function performs visual block extraction on the website and extracts text content from the resulting 
@@ -219,7 +231,7 @@ class GRC:
         self.output.blockOutput(block_list, path_list[1])
         content = Output.textOutput(block_list)
 
-        print('---------------------------------------------Done---------------------------------------------')
+        print('---------------------------------------------Done---------------------------------------------\n\n')
         return content
 
     '''
@@ -228,7 +240,6 @@ class GRC:
     @param url
     @param path_list
     '''
-
     def getJavaScript(self, driver, url, path_list):
         # Set the page load timeout to 30 seconds
         driver.set_page_load_timeout(30)
