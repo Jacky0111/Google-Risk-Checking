@@ -95,7 +95,8 @@ class GRC:
     Generate link by combine google search link with extracted english name
     '''
     def generateLink(self):
-        # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each hit name
+        # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each
+        # hit name
         self.df_ori['URL'] = 'https://www.google.com/search?q=' + \
                              self.df_ori['EN_HIT_NAME'].str.replace(' ', '+') + \
                              ' AND (~crime OR ~corruption OR ~money laundering OR ~bribe)'.replace(' ', '+')
@@ -214,8 +215,9 @@ class GRC:
         # return False
 
     '''
-    This function performs visual block extraction on the website and extracts text content from the resulting block lists.
-    @param path_list
+    This function performs visual block extraction on the website and extracts text content from the resulting 
+    block lists. 
+    @param path_list 
     @return content
     '''
     def Vips(self, path_list):
@@ -344,7 +346,8 @@ class GRC:
             return ''
 
     '''
-    Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific image.
+    Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific 
+    image.
     '''
     def clickablePathText(self):
         # Load the workbook and worksheet
