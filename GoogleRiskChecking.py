@@ -94,7 +94,6 @@ class GRC:
     '''
     Generate link by combine google search link with extracted english name
     '''
-
     def generateLink(self):
         # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each
         # hit name
@@ -396,7 +395,11 @@ class GRC:
     def setDriver():
         options = Options()
         options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
         options.add_argument('--disable-gpu')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--proxy-server=vpn_ip_address:port_number')
         options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
         caps = DesiredCapabilities.CHROME
         browser = webdriver.Chrome(desired_capabilities=caps, options=options)
