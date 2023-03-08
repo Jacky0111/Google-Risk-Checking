@@ -9,7 +9,6 @@ import pandas as pd
 from time import sleep
 from pathlib import Path
 from fuzzywuzzy import fuzz
-from datetime import datetime
 from urllib.parse import urlparse
 from openpyxl.styles import Font, Color
 
@@ -46,7 +45,7 @@ class GRC:
         self.input_file = input_file
         self.url_file = f"{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
         self.output_file = f"{Path(self.url_file).stem.replace(' ', '')}_OutputFile.xlsx"
-        self.current_date_time = str(datetime.now().strftime("%H%M-%d-%b-%Y"))
+        self.current_date_time = str(datetime.datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     '''
     Execution function for Google Risk Checking
@@ -77,6 +76,8 @@ class GRC:
             # Extract the Sheet1 dataframe and the list of keywords from the Keywords List dataframe
             self.df_ori = df_dict['Sheet1']
             self.keywords = df_dict['Keywords List']['Keywords'].tolist()
+
+            print(self.df_ori)
         except ValueError:
             # If the read_excel function raises a ValueError, it means the file does not have Sheet1 and Keywords
             # List sheets In this case, read the file as a single dataframe
@@ -105,7 +106,7 @@ class GRC:
     Boolean search the hit name by using Chrome browser
     '''
     def googleSearchHitName(self):
-        print('-------------------------------------Google Search Hit Name-----------------------------------')
+        print('-----------------------------------Google Search Hit Name-------------------------------------')
         count = 0
 
         for index, row in self.df_ori.iterrows():
@@ -136,7 +137,7 @@ class GRC:
 
             # Set up Selenium driver and file paths for user reference and development reference
             driver = GRC.setDriver()
-            date_time = datetime.now().strftime("%Y%m%d-%H%M")
+            date_time = datetime.datetime.now().strftime("%Y%m%d-%H%M")
             user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(date_time))
             dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(date_time))
             path_list = [user_file_path, dev_file_path]
@@ -164,7 +165,7 @@ class GRC:
 
             end = time.time()
             seconds = datetime.timedelta(seconds=end - start).seconds
-            print(f'{str(seconds)} seconds')
+            print(f'{index}. {str(seconds)} seconds')
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
@@ -399,7 +400,6 @@ class GRC:
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-extensions')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--proxy-server=vpn_ip_address:port_number')
         options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
         caps = DesiredCapabilities.CHROME
         browser = webdriver.Chrome(desired_capabilities=caps, options=options)
