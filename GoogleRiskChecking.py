@@ -1,6 +1,8 @@
 import os
 import json
+import time
 import spacy
+import datetime
 import itertools
 import openpyxl
 import pandas as pd
@@ -127,6 +129,8 @@ class GRC:
         self.df1.to_excel(self.url_file)
 
     def specificNameWebsite(self):
+        start = time.time()
+
         for index, row in self.df2.iterrows():
             self.node_list.clear()
 
@@ -158,8 +162,9 @@ class GRC:
             # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
-            if index == 1:
-                break
+            end = time.time()
+            seconds = datetime.timedelta(seconds=end - start).seconds
+            print(f'{str(seconds)} seconds')
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
