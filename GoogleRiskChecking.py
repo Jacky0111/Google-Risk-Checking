@@ -94,7 +94,8 @@ class GRC:
     '''
 
     def generateLink(self):
-        # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each hit name
+        # Create a new column called `URL` in the df_ori dataframe, containing the Google search query URL for each
+        # hit name
         self.df_ori['URL'] = 'https://www.google.com/search?q=' + \
                              self.df_ori['EN_HIT_NAME'].str.replace(' ', '+') + \
                              ' AND (~crime OR ~corruption OR ~money laundering OR ~bribe)'.replace(' ', '+')
@@ -157,9 +158,6 @@ class GRC:
 
             # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
-
-            if index == 1:
-                break
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
