@@ -1,6 +1,8 @@
 import os
 import json
+import time
 import spacy
+import datetime
 import itertools
 import openpyxl
 import pandas as pd
@@ -128,6 +130,8 @@ class GRC:
         self.df1.to_excel(self.url_file)
 
     def specificNameWebsite(self):
+        start = time.time()
+
         for index, row in self.df2.iterrows():
             self.node_list.clear()
 
@@ -158,6 +162,10 @@ class GRC:
 
             # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
+
+            end = time.time()
+            seconds = datetime.timedelta(seconds=end - start).seconds
+            print(f'{str(seconds)} seconds')
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
@@ -196,8 +204,9 @@ class GRC:
         return False
 
     '''
-    This function performs visual block extraction on the website and extracts text content from the resulting block lists.
-    @param path_list
+    This function performs visual block extraction on the website and extracts text content from the resulting 
+    block lists. 
+    @param path_list 
     @return content
     '''
     def Vips(self, path_list):
@@ -327,7 +336,8 @@ class GRC:
             return ''
 
     '''
-    Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific image.
+    Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific 
+    image.
     '''
     def clickablePathText(self):
         # Load the workbook and worksheet
