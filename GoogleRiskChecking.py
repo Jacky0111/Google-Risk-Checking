@@ -118,7 +118,6 @@ class GRC:
             table_items = self.extractHitNameResults(driver, row)
             # Increment the index of the search results by the number of rows already processed
             table_items.index += 1 + count
-            count += table_items.shape[0]
             table_items.index.name = 'No.'
             # Add the search results to the concatenated DataFrame
             self.df1 = pd.concat([self.df1, table_items])
