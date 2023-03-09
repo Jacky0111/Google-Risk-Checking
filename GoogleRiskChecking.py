@@ -3,8 +3,11 @@ import json
 import time
 import spacy
 import datetime
-import itertools
 import openpyxl
+import itertools
+import pdfplumber
+import urllib.request
+
 import pandas as pd
 from time import sleep
 from pathlib import Path
@@ -53,11 +56,11 @@ class GRC:
     Execution function for Google Risk Checking
     '''
     def runner(self):
-        # Step 1: Google boolean search hit name and store the URL to new output file.
-        self.readExcel(self.input_file)
-        self.extractEngName()
-        self.generateLink()
-        self.googleSearchHitName()
+        # # Step 1: Google boolean search hit name and store the URL to new output file.
+        # self.readExcel(self.input_file)
+        # self.extractEngName()
+        # self.generateLink()
+        # self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcel(self.url_file)
@@ -133,6 +136,9 @@ class GRC:
     def specificNameWebsite(self):
         start = time.time()
 
+        # Detect the file type and store it in a new `File_Type` column
+        self.df2['File_Type'] = self.df2['URL'].apply(lambda url: 'PDF' if url.endswith('.pdf') else 'HTML')
+
         for index, row in self.df2.iterrows():
             self.node_list.clear()
 
@@ -143,19 +149,50 @@ class GRC:
             dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(date_time))
             path_list = [user_file_path, dev_file_path]
 
-            try:
-                # Get website content using Selenium driver and store in path_list
-                self.getJavaScript(driver, row['URL'], path_list)
-            except:
-                # If there is an error, continue to next row
-                continue
+            # Check if the current row is HTML or PDF
+            if row['File_Type'] == 'HTML':
+                try:
+                    # Get website content using Selenium driver and store in path_list
+                    self.getJavaScript(driver, row['URL'], path_list)
+                except:
+                    # If there is an error, continue to next row
+                    continue
 
-            # Store text content from the website in `Text Content` column
-            self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
+                # Store text content from the website in `Text Content` column
+                self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
-            # Store screenshot path from the website to excel as hyperlink format
-            path_link = path_list[0] + '.png'
-            self.df2.loc[index, 'Screenshot Path'] = path_link
+                # Store screenshot path from the website to excel as hyperlink format
+                path_link = path_list[0] + '.png'
+                self.df2.loc[index, 'File Path'] = path_link
+
+            elif row['File_Type'] == 'PDF':
+                try:
+                    temp_pdf = 'temp.pdf'
+
+                    # Download the PDF file
+                    urllib.request.urlretrieve(row['URL'], filename=temp_pdf)
+
+                    # Move the downloaded file to the specified local path
+                    with open(temp_pdf, 'rb') as f1:
+                        with open(path_list[0] + '.pdf', 'wb') as f2:
+                            f2.write(f1.read())
+
+                    # Read the PDF file and extract text
+                    with pdfplumber.open(temp_pdf) as pdf:
+                        content = ''
+                        for page in pdf.pages:
+                            content += page.extract_text()
+
+                    # Store text content from the website in `Text Content` column
+                    self.df2.loc[index, 'Text Content'] = content
+
+                    # Store screenshot path from the website to excel as hyperlink format
+                    self.df2.loc[index, 'File Path'] = path_list[0] + '.pdf'
+
+                except Exception as e:
+                    # If there is an error, print the error message and continue to next row
+                    print(f"Error downloading PDF file from {row['URL']}: {str(e)}")
+                    continue
 
             # Check if name exists in the content column and store result in `Match` column
             self.df2['Text Content'] = self.df2['Text Content'].astype(str)
@@ -170,51 +207,6 @@ class GRC:
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
-
-    @staticmethod
-    def matchName(person_name, essay):
-        nlp = spacy.load('en_core_web_sm')
-
-        # Process the essay text using spaCy
-        doc = nlp(essay)
-
-        # Split the person name into individual tokens
-        person_name_tokens = person_name.split()
-
-        # Find all permutations of the person name
-        person_name_permutations = [
-            " ".join(permutation)
-            for r in range(1, len(person_name_tokens) + 1)
-            for permutation in itertools.permutations(person_name_tokens, r)
-        ]
-
-        # Iterate over the entities in the sentence and check if any of them are a person
-        for entity in doc.ents:
-            if entity.label_ == 'PERSON':
-                person_name = entity.text
-                # Check if the person name matches any permutation of the provided name
-                for permutation in person_name_permutations:
-                    distance = fuzz.ratio(person_name.lower(), permutation.lower())
-                    if distance >= 65:
-                        print('Match found:', person_name)
-                        return True
-        return False
-
-        # # Iterate over the words and phrases in the document
-        # for i, token in enumerate(doc):
-        #     # Check if the token matches the first token of any permutation of the person name
-        #     for permutation in person_name_permutations:
-        #         # Check if the remaining tokens match the subsequent tokens of the permutation
-        #         j = 0
-        #         while i + j < len(doc) and j < len(permutation.split()):
-        #             distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
-        #             if distance < 65:
-        #                 break
-        #             j += 1
-        #         # If all tokens match, print the match and break the loop to avoid duplicate matches
-        #         if j == len(permutation.split()):
-        #             return True
-        # return False
 
     '''
     This function performs visual block extraction on the website and extracts text content from the resulting 
@@ -358,13 +350,13 @@ class GRC:
 
         # Loop through the rows of the worksheet and create a hyperlink for each file path
         for row in range(2, worksheet.max_row + 1):
-            file_path = worksheet.cell(row=row, column=10).value
+            file_path = worksheet.cell(row=row, column=11).value
             hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=file_path)
-            worksheet.cell(row=row, column=10).hyperlink = hyperlink
+            worksheet.cell(row=row, column=11).hyperlink = hyperlink
 
             # set the font color and underline style for the cell
             font = Font(color=Color("0000EE"), underline='single')
-            worksheet.cell(row=row, column=10).font = font
+            worksheet.cell(row=row, column=11).font = font
 
         # Save the changes to the Excel file
         workbook.save(self.output_file)
@@ -410,6 +402,51 @@ class GRC:
             driver.quit()
 
         return pd.DataFrame(table_items_list)
+
+    @staticmethod
+    def matchName(person_name, essay):
+        nlp = spacy.load('en_core_web_sm')
+
+        # Process the essay text using spaCy
+        doc = nlp(essay)
+
+        # Split the person name into individual tokens
+        person_name_tokens = person_name.split()
+
+        # Find all permutations of the person name
+        person_name_permutations = [
+            " ".join(permutation)
+            for r in range(1, len(person_name_tokens) + 1)
+            for permutation in itertools.permutations(person_name_tokens, r)
+        ]
+
+        # Iterate over the entities in the sentence and check if any of them are a person
+        for entity in doc.ents:
+            if entity.label_ == 'PERSON':
+                person_name = entity.text
+                # Check if the person name matches any permutation of the provided name
+                for permutation in person_name_permutations:
+                    distance = fuzz.ratio(person_name.lower(), permutation.lower())
+                    if distance >= 65:
+                        print('Match found:', person_name)
+                        return True
+        return False
+
+        # # Iterate over the words and phrases in the document
+        # for i, token in enumerate(doc):
+        #     # Check if the token matches the first token of any permutation of the person name
+        #     for permutation in person_name_permutations:
+        #         # Check if the remaining tokens match the subsequent tokens of the permutation
+        #         j = 0
+        #         while i + j < len(doc) and j < len(permutation.split()):
+        #             distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
+        #             if distance < 65:
+        #                 break
+        #             j += 1
+        #         # If all tokens match, print the match and break the loop to avoid duplicate matches
+        #         if j == len(permutation.split()):
+        #             return True
+        # return False
 
     '''
     Set Chrome driver
