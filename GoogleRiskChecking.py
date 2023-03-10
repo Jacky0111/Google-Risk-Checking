@@ -195,16 +195,16 @@ class GRC:
                     print(f"Error downloading PDF file from {row['URL']}: {str(e)}")
                     continue
 
-            # Check if name exists in the content column and store result in `Match` column
-            self.df2['Text Content'] = self.df2['Text Content'].astype(str)
-            self.df2['Match'] = self.df2.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
-
-            # Check if keyword exists in the content column and store result in `Keyword Hit?` column
-            self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
-
             end = time.time()
             seconds = datetime.timedelta(seconds=end - start).seconds
             print(f'{index+1}. {str(seconds)} seconds')
+
+        # Check if name exists in the content column and store result in `Match` column
+        self.df2['Text Content'] = self.df2['Text Content'].astype(str)
+        self.df2['Match'] = self.df2.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
+
+        # Check if keyword exists in the content column and store result in `Keyword Hit?` column
+        self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
@@ -406,11 +406,11 @@ class GRC:
 
     @staticmethod
     def matchName(person_name, essay):
+        matched_list = []
         nlp = spacy.load('en_core_web_sm')
 
         # Process the essay text using spaCy
         doc = nlp(essay)
-        print(doc)
 
         # Split the person name into individual tokens
         person_name_tokens = person_name.split()
@@ -424,15 +424,18 @@ class GRC:
 
         # Iterate over the entities in the sentence and check if any of them are a person
         for entity in doc.ents:
-            # print(entity)
             if entity.label_ == 'PERSON':
                 person_name = entity.text
                 # Check if the person name matches any permutation of the provided name
                 for permutation in person_name_permutations:
                     distance = fuzz.ratio(person_name.lower(), permutation.lower())
-                    if distance >= 65:
+                    if distance >= 80:
+                        matched_list.append(person_name)
                         print('Match found:', person_name)
-                        return True
+        if matched_list:
+            return list(set(matched_list))
+
+        print('No match found')
         return False
 
         # # Iterate over the words and phrases in the document
