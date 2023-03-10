@@ -56,11 +56,11 @@ class GRC:
     Execution function for Google Risk Checking
     '''
     def runner(self):
-        # # Step 1: Google boolean search hit name and store the URL to new output file.
-        # self.readExcel(self.input_file)
-        # self.extractEngName()
-        # self.generateLink()
-        # self.googleSearchHitName()
+        # Step 1: Google boolean search hit name and store the URL to new output file.
+        self.readExcel(self.input_file)
+        self.extractEngName()
+        self.generateLink()
+        self.googleSearchHitName()
 
         # Step 2: Screenshot the entire website and check the content of website with name and keywords provided.
         self.readExcel(self.url_file)
@@ -144,9 +144,10 @@ class GRC:
 
             # Set up Selenium driver and file paths for user reference and development reference
             driver = GRC.setDriver()
-            date_time = datetime.datetime.now().strftime("%Y%m%d-%H%M")
-            user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(date_time))
-            dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(date_time))
+            current_date = datetime.datetime.now().strftime("%Y%m%d")
+            current_time = datetime.datetime.now().strftime("%H%M")
+            user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(current_date), str(current_time))
+            dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(current_date), str(current_time))
             path_list = [user_file_path, dev_file_path]
 
             # Check if the current row is HTML or PDF
@@ -186,7 +187,7 @@ class GRC:
                     # Store text content from the website in `Text Content` column
                     self.df2.loc[index, 'Text Content'] = content
 
-                    # Store screenshot path from the website to excel as hyperlink format
+                    # Store pdf path from the website to excel as hyperlink format
                     self.df2.loc[index, 'File Path'] = path_list[0] + '.pdf'
 
                 except Exception as e:
@@ -203,7 +204,7 @@ class GRC:
 
             end = time.time()
             seconds = datetime.timedelta(seconds=end - start).seconds
-            print(f'{index}. {str(seconds)} seconds')
+            print(f'{index+1}. {str(seconds)} seconds')
 
         # Write final output to Excel file
         self.df2.to_excel(self.output_file, index=False)
@@ -409,6 +410,7 @@ class GRC:
 
         # Process the essay text using spaCy
         doc = nlp(essay)
+        print(doc)
 
         # Split the person name into individual tokens
         person_name_tokens = person_name.split()
@@ -422,6 +424,7 @@ class GRC:
 
         # Iterate over the entities in the sentence and check if any of them are a person
         for entity in doc.ents:
+            # print(entity)
             if entity.label_ == 'PERSON':
                 person_name = entity.text
                 # Check if the person name matches any permutation of the provided name
@@ -466,15 +469,18 @@ class GRC:
         return browser
 
     '''
-    Create a folder at C drive where every use can access from their pc and save screenshot to the folder
+    Create a folder at C drive where every use can access from their pc and save output to the folder
     @param alert_id
     @param number 
     @param dt
     @return file path
     '''
     @staticmethod
-    def setUserReferenceFileName(alert_id, number, dt):
-        return 'C:/Screenshots/' + alert_id + '_' + number + '_' + dt
+    def setUserReferenceFileName(alert_id, number, dd, tt):
+        path = 'C:/Outputs/' + dd + '/'
+        fn = alert_id + '_' + number + '_' + tt
+        os.makedirs(path, exist_ok=True)
+        return path + fn
 
     '''
     Set the folder name and make directory
@@ -484,9 +490,9 @@ class GRC:
     @return file path
     '''
     @staticmethod
-    def setFolderName(url, alert_id, number, dt):
+    def setFolderName(url, alert_id, number, dd, tt):
         parse_url = urlparse(url)
-        path = r'Screenshots/' + alert_id + '_' + number + '_' + dt + '/'
+        path = r'Outputs/' + alert_id + '_' + number + '_' + dd + '-' + tt + '/'
         os.makedirs(path)
         return path + parse_url.netloc
 
