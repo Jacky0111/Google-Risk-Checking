@@ -36,6 +36,7 @@ class GRC:
     # File path
     input_file = None
     url_file = None
+    content_file = None
     output_file = None
 
     keywords = []
@@ -44,12 +45,14 @@ class GRC:
 
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
+    df3 = pd.DataFrame()
     df_ori = pd.DataFrame()
 
     def __init__(self, input_file):
         self.input_file = input_file
         self.url_file = f"{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
-        self.output_file = f"{Path(self.url_file).stem.replace(' ', '')}_OutputFile.xlsx"
+        self.content_file = f"{Path(self.url_file).stem.replace(' ', '')}_Content.xlsx"
+        self.output_file = f"{Path(self.content_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     '''
@@ -199,15 +202,18 @@ class GRC:
             seconds = datetime.timedelta(seconds=end - start).seconds
             print(f'{index+1}. {str(seconds)} seconds')
 
+        self.df2.to_excel(self.content_file, index=False)
+        self.df3 = pd.read_excel(self.content_file)
+
         # Check if name exists in the content column and store result in `Match` column
-        self.df2['Text Content'] = self.df2['Text Content'].astype(str)
-        self.df2['Match'] = self.df2.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
+        self.df3['Text Content'] = self.df3['Text Content'].astype(str)
+        self.df3['Match'] = self.df3.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
 
         # Check if keyword exists in the content column and store result in `Keyword Hit?` column
-        self.df2['Keyword Hit?'] = self.df2['Text Content'].apply(lambda x: self.keywordsChecking(x))
+        self.df3['Keyword Hit?'] = self.df3['Text Content'].apply(lambda x: self.keywordsChecking(x))
 
         # Write final output to Excel file
-        self.df2.to_excel(self.output_file, index=False)
+        self.df3.to_excel(self.output_file, index=False)
 
     '''
     This function performs visual block extraction on the website and extracts text content from the resulting 
@@ -378,7 +384,7 @@ class GRC:
                                  'Entry-category': entry_cat,
                                  'Entry-subcategory': entry_sub_cat,
                                  'Ent Id': ent_id,
-                                 'URL': 'DUPLICATE'
+                                 'URL': 'DUPLICATE HIT NAME'
                                  }]
         else:
             self.name_list.append(hit_name)
