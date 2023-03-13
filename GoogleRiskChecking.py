@@ -408,6 +408,7 @@ class GRC:
     def matchName(person_name, essay):
         matched_list = []
         nlp = spacy.load('en_core_web_sm')
+        nlp.max_length = 15000000  # set the max_length to the desired value
 
         # Process the essay text using spaCy
         doc = nlp(essay)
