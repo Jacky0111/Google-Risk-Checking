@@ -158,12 +158,12 @@ class GRC:
                 try:
                     # Get website content using Selenium driver and store in path_list
                     self.getJavaScript(driver, row['URL'], path_list)
+
+                    # Store text content from the website in `Text Content` column
+                    self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
                 except:
                     # If there is an error, continue to next row
                     continue
-
-                # Store text content from the website in `Text Content` column
-                self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
 
                 # Store screenshot path from the website to excel as hyperlink format
                 path_link = path_list[0] + '.png'
