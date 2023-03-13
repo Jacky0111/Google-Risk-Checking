@@ -205,12 +205,15 @@ class GRC:
         self.df2.to_excel(self.content_file, index=False)
         self.df3 = pd.read_excel(self.content_file)
 
-        # Check if name exists in the content column and store result in `Match` column
-        self.df3['Text Content'] = self.df3['Text Content'].astype(str)
-        self.df3['Match'] = self.df3.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
+        try:
+            # Check if name exists in the content column and store result in `Match` column
+            self.df3['Text Content'] = self.df3['Text Content'].astype(str)
+            self.df3['Match'] = self.df3.apply(lambda x: self.matchName(x['Hit Name'], x['Text Content']), axis=1)
 
-        # Check if keyword exists in the content column and store result in `Keyword Hit?` column
-        self.df3['Keyword Hit?'] = self.df3['Text Content'].apply(lambda x: self.keywordsChecking(x))
+            # Check if keyword exists in the content column and store result in `Keyword Hit?` column
+            self.df3['Keyword Hit?'] = self.df3['Text Content'].apply(lambda x: self.keywordsChecking(x))
+        except:
+            pass
 
         # Write final output to Excel file
         self.df3.to_excel(self.output_file, index=False)
