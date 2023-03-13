@@ -92,10 +92,10 @@ class Output:
         for block in block_list:
             for box in block.boxes:
                 # Check if the box node type is text (i.e. 3) and the parent node is a <p> tag
-                if box.node_type == 3 and box.parent_node.node_name == "p":
-                    # Check if the length of the text in the box is less than 10
-                    if len(box.node_value.split()) < 10:
-                        continue
+                if box.node_type == 3:
+                    # # Check if the length of the text in the box is less than 10
+                    # if len(box.node_value.split()) < 10:
+                    #     continue
                     # If the length is greater than or equal to 10, add the text to the content string
                     content += box.node_value + ' '
 
