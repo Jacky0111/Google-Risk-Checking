@@ -135,6 +135,8 @@ class GRC:
 
         # Save the concatenated DataFrame to an Excel file
         self.df1.to_excel(self.url_file)
+        # Clear DataFrame to save more memory
+        self.df1 = pd.DataFrame()
 
     def specificNameWebsite(self):
         start = time.time()
@@ -203,6 +205,8 @@ class GRC:
             print(f'{index+1}. {str(seconds)} seconds')
 
         self.df2.to_excel(self.content_file, index=False)
+        # Clear DataFrame to save more memory
+        self.df2 = pd.DataFrame()
         self.df3 = pd.read_excel(self.content_file)
 
         try:
