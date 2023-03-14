@@ -370,7 +370,10 @@ class GRC:
         # Loop through the rows of the worksheet and create a hyperlink for each file path
         for row in range(2, worksheet.max_row + 1):
             fp = worksheet.cell(row=row, column=11).value
-            print(fp)
+
+            if fp is None:
+                continue
+
             hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=fp)
             worksheet.cell(row=row, column=11).hyperlink = hyperlink
 
