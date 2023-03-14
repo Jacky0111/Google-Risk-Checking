@@ -198,6 +198,11 @@ class GRC:
                 except Exception as e:
                     # If there is an error, print the error message and continue to next row
                     print(f"Error downloading PDF file from {row['URL']}: {str(e)}")
+
+                    end = time.time()
+                    seconds = datetime.timedelta(seconds=end - start).seconds
+                    print(f'{index + 1}. {str(seconds)} seconds')
+
                     continue
 
             end = time.time()
@@ -364,8 +369,9 @@ class GRC:
 
         # Loop through the rows of the worksheet and create a hyperlink for each file path
         for row in range(2, worksheet.max_row + 1):
-            file_path = worksheet.cell(row=row, column=11).value
-            hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=file_path)
+            fp = worksheet.cell(row=row, column=11).value
+            print(fp)
+            hyperlink = openpyxl.worksheet.hyperlink.Hyperlink(ref=f"D{row}", target=fp)
             worksheet.cell(row=row, column=11).hyperlink = hyperlink
 
             # set the font color and underline style for the cell
