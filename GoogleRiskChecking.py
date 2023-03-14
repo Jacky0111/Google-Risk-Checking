@@ -466,22 +466,6 @@ class GRC:
         print('No match found')
         return False
 
-        # # Iterate over the words and phrases in the document
-        # for i, token in enumerate(doc):
-        #     # Check if the token matches the first token of any permutation of the person name
-        #     for permutation in person_name_permutations:
-        #         # Check if the remaining tokens match the subsequent tokens of the permutation
-        #         j = 0
-        #         while i + j < len(doc) and j < len(permutation.split()):
-        #             distance = fuzz.ratio(doc[i + j].text.lower(), permutation.split()[j].lower())
-        #             if distance < 65:
-        #                 break
-        #             j += 1
-        #         # If all tokens match, print the match and break the loop to avoid duplicate matches
-        #         if j == len(permutation.split()):
-        #             return True
-        # return False
-
     '''
     Set Chrome driver
     @return browser
@@ -508,8 +492,8 @@ class GRC:
     '''
     @staticmethod
     def setUserReferenceFileName(alert_id, number, dd, tt):
-        path = 'C:/Outputs/' + dd + '/'
-        fn = alert_id + '_' + number + '_' + tt
+        path = 'C:/Outputs/' + dd + '_' + tt + '/'
+        fn = alert_id + '_' + number
         os.makedirs(path, exist_ok=True)
         return path + fn
 
