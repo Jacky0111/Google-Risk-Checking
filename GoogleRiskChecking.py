@@ -212,7 +212,7 @@ class GRC:
 
             end = time.time()
             seconds = datetime.timedelta(seconds=end - start).seconds
-            print(f'{index+1}. {str(seconds)} seconds')
+            print(f'{index + 1}. {str(seconds)} seconds')
 
         self.df2.to_excel(self.content_file, index=False)
         # Clear DataFrame to save more memory
