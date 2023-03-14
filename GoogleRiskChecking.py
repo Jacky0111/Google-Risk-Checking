@@ -142,7 +142,8 @@ class GRC:
         start = time.time()
 
         # Detect the file type and store it in a new `File_Type` column
-        self.df2['File_Type'] = self.df2['URL'].apply(lambda url: 'PDF' if url.endswith('.pdf') else 'HTML')
+        # self.df2['File_Type'] = self.df2['URL'].apply(lambda url: 'PDF' if url.endswith('.pdf') else 'HTML')
+        self.df2['File_Type'] = ['PDF' if url.endswith('.pdf') else 'HTML' for url in self.df2['URL']]
 
         for index, row in self.df2.iterrows():
             self.node_list.clear()
@@ -165,6 +166,10 @@ class GRC:
                     self.df2.loc[index, 'Text Content'] = self.Vips(path_list)
                 except:
                     # If there is an error, continue to next row
+                    end = time.time()
+                    seconds = datetime.timedelta(seconds=end - start).seconds
+                    print(f'{index + 1}. {str(seconds)} seconds')
+
                     continue
 
                 # Store screenshot path from the website to excel as hyperlink format
