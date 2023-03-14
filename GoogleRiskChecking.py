@@ -34,6 +34,7 @@ class GRC:
     current_date_time = None
 
     # File path
+    user_path = None
     input_file = None
     url_file = None
     content_file = None
@@ -152,7 +153,7 @@ class GRC:
             driver = GRC.setDriver()
             current_date = datetime.datetime.now().strftime("%Y%m%d")
             current_time = datetime.datetime.now().strftime("%H%M")
-            user_file_path = GRC.setUserReferenceFileName(str(row['Alert ID']), str(row['No.']), str(current_date), str(current_time))
+            user_file_path = self.setUserReferenceFileName(index, str(row['Alert ID']), str(row['No.']), str(current_date), str(current_time))
             dev_file_path = GRC.setFolderName(row['URL'], str(row['Alert ID']), str(row['No.']), str(current_date), str(current_time))
             path_list = [user_file_path, dev_file_path]
 
@@ -490,12 +491,13 @@ class GRC:
     @param dt
     @return file path
     '''
-    @staticmethod
-    def setUserReferenceFileName(alert_id, number, dd, tt):
-        path = 'C:/Outputs/' + dd + '_' + tt + '/'
-        fn = alert_id + '_' + number
-        os.makedirs(path, exist_ok=True)
-        return path + fn
+    def setUserReferenceFileName(self, i, alert_id, number, dd, tt):
+        if i != 0:
+            return self.user_path + f"{alert_id}_{number}"
+
+        self.user_path = f'C:/Outputs/{dd}_{tt}/'
+        os.makedirs(self.user_path, exist_ok=True)
+        return f"{self.user_path}{alert_id}_{number}"
 
     '''
     Set the folder name and make directory
