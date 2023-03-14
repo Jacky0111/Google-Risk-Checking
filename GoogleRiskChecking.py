@@ -231,6 +231,7 @@ class GRC:
             pass
 
         # Write final output to Excel file
+        self.df3.to_excel(self.user_path + self.output_file, index=False)
         self.df3.to_excel(self.output_file, index=False)
 
     '''
