@@ -1,10 +1,6 @@
 import os
 import sys
-
 import pandas as pd
-from pathlib import Path
-from urllib.parse import unquote, urlparse
-
 import streamlit as st
 from streamlit import runtime
 from streamlit.web import cli as stcli
@@ -30,12 +26,15 @@ class Deployment:
         if self.uploaded_file is not None:
             file_path = self.uploaded_file.name
             grc = GRC(file_path)
-            grc.runner()
-        # try:
-        #     self.output_name = f"{Path(self.uploaded_file.name).stem.replace(' ', '')}_OutputFile.csv"
-        #     st.write(self.output_name)
-        # except AttributeError:
-        #     pass
+            f_path, self.df = grc.runner()
+            self.display()
+
+            # Create a button in Streamlit
+            if st.button('Open Folder'):
+                # Call the open_folder function with the folder path as an argument
+                Deployment.open_folder(f_path)
+                # Stop the entire process
+                st.stop()
 
     '''
     Print header
@@ -73,6 +72,13 @@ class Deployment:
         st.write(f'Columns: {self.df.shape[1]}')
         st.write(self.df)
         # st.write(self.keywords)
+
+    '''
+    Open file explorer window for a given folder path
+    '''
+    @staticmethod
+    def open_folder(folder_path):
+        os.startfile(folder_path)
 
 
 if __name__ == '__main__':
