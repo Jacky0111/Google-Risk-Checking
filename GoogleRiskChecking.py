@@ -73,8 +73,10 @@ class GRC:
         self.specificNameWebsite()
 
         # Step 3: Create clickable path text
-        self.clickablePathText(self.output_file)
-        self.clickablePathText(self.user_path + self.output_file)
+        GRC.clickablePathText(self.output_file)
+        GRC.clickablePathText(self.user_path + self.output_file)
+
+        return self.user_path, self.df3
 
     '''
     Read Excel file
@@ -148,7 +150,6 @@ class GRC:
         # Detect the file type and store it in a new `File_Type` column
         # self.df2['File_Type'] = self.df2['URL'].apply(lambda url: 'PDF' if url.endswith('.pdf') else 'HTML')
         self.df2['File_Type'] = ['PDF' if url.endswith('.pdf') else 'HTML' for url in self.df2['URL']]
-        st.write(self.df2)
 
         for index, row in self.df2.iterrows():
             self.node_list.clear()
@@ -373,7 +374,8 @@ class GRC:
     Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific 
     image.
     '''
-    def clickablePathText(self, xlsx_file):
+    @staticmethod
+    def clickablePathText(xlsx_file):
         print('-----------------------------------Convert to Clickable text----------------------------------')
         # Load the workbook and worksheet
         workbook = openpyxl.load_workbook(xlsx_file)
@@ -394,7 +396,7 @@ class GRC:
             worksheet.cell(row=row, column=11).font = font
 
         # Save the changes to the Excel file
-        workbook.save(self.output_file)
+        workbook.save(xlsx_file)
 
     '''
     Extract Hit Name results from the first page of Google Search
