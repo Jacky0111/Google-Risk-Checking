@@ -15,6 +15,10 @@ from fuzzywuzzy import fuzz
 from urllib.parse import urlparse
 from openpyxl.styles import Font, Color
 
+import streamlit as st
+from streamlit import runtime
+from streamlit.web import cli as stcli
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
@@ -145,6 +149,7 @@ class GRC:
         # Detect the file type and store it in a new `File_Type` column
         # self.df2['File_Type'] = self.df2['URL'].apply(lambda url: 'PDF' if url.endswith('.pdf') else 'HTML')
         self.df2['File_Type'] = ['PDF' if url.endswith('.pdf') else 'HTML' for url in self.df2['URL']]
+        st.write(self.df2)
 
         for index, row in self.df2.iterrows():
             self.node_list.clear()
