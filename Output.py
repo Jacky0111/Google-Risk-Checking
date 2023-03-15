@@ -92,13 +92,26 @@ class Output:
         for block in block_list:
             for box in block.boxes:
                 # Check if the box node type is text (i.e. 3) and the parent node is a <p> tag
-                if box.node_type == 3:
-                    # # Check if the length of the text in the box is less than 10
-                    # if len(box.node_value.split()) < 10:
-                    #     continue
-                    # If the length is greater than or equal to 10, add the text to the content string
+                if box.node_type == 3 and Output.isTag(box.parent_node.node_name):
                     content += box.node_value + ' '
 
         return content
+
+    @staticmethod
+    def isTag(element):
+        if (element == 'p' or
+                element == 'h1' or
+                element == 'h2' or
+                element == 'h3' or
+                element == 'h4' or
+                element == 'h5' or
+                element == 'h6' or
+                element == 'em' or
+                element == 'strong' or
+                element == 'small' or
+                element == 'blockquote'):
+            return True
+        else:
+            return False
 
 
