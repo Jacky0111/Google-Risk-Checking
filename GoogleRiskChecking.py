@@ -16,8 +16,6 @@ from urllib.parse import urlparse
 from openpyxl.styles import Font, Color
 
 import streamlit as st
-from streamlit import runtime
-from streamlit.web import cli as stcli
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -75,7 +73,8 @@ class GRC:
         self.specificNameWebsite()
 
         # Step 3: Create clickable path text
-        self.clickablePathText()
+        self.clickablePathText(self.output_file)
+        self.clickablePathText(self.user_path + self.output_file)
 
     '''
     Read Excel file
@@ -374,9 +373,10 @@ class GRC:
     Convert the path text to a clickable text, therefore when user clicks the path text, it will open the specific 
     image.
     '''
-    def clickablePathText(self):
+    def clickablePathText(self, xlsx_file):
+        print('-----------------------------------Convert to Clickable text----------------------------------')
         # Load the workbook and worksheet
-        workbook = openpyxl.load_workbook(self.output_file)
+        workbook = openpyxl.load_workbook(xlsx_file)
         worksheet = workbook.active
 
         # Loop through the rows of the worksheet and create a hyperlink for each file path
