@@ -9,3 +9,4 @@ fuzzywuzzy~=0.18.0
 ipython==8.11.0
 pathlib~=1.0.1
 pdfplumber~=0.8.0
+streamlit~=1.17.0
