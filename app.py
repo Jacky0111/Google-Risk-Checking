@@ -11,6 +11,9 @@ from streamlit.web import cli as stcli
 
 from GoogleRiskChecking import GRC
 
+st.set_page_config(layout="wide")
+pd.set_option('display.max_columns', None)
+
 
 class Deployment:
     df = pd.DataFrame()
@@ -45,7 +48,7 @@ class Deployment:
     Upload csv or xlsx file
     '''
     def uploadFile(self):
-        self.uploaded_file = st.file_uploader("Upload your input CSV or XLSX file", type=['csv', 'xlsx'])
+        self.uploaded_file = st.file_uploader("Upload your input XLSX file", type=['xlsx'])
 
         if self.uploaded_file is not None:
             # Read the Excel file into a dictionary of dataframes, with Sheet1 and Keywords List as keys
