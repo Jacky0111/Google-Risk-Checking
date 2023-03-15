@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 
 import pandas as pd
 from pathlib import Path
@@ -28,6 +27,7 @@ class Deployment:
         if self.uploaded_file is not None:
             file_path = self.uploaded_file.name
             grc = GRC(file_path)
+            grc.runner()
         # try:
         #     self.output_name = f"{Path(self.uploaded_file.name).stem.replace(' ', '')}_OutputFile.csv"
         #     st.write(self.output_name)
