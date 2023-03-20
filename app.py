@@ -20,6 +20,7 @@ class Deployment:
 
     def __init__(self):
         Deployment.header()
+        self.df = pd.DataFrame()
         self.uploadFile()
 
     def runner(self):
@@ -28,13 +29,15 @@ class Deployment:
             grc = GRC(file_path)
             f_path, self.df = grc.runner()
             self.display()
+            # st.write(f'Done! Files saved at {f_path} ')
 
             # Create a button in Streamlit
             if st.button('Open Folder'):
+                global runtime_available
+                runtime_available = False
                 # Call the open_folder function with the folder path as an argument
-                Deployment.open_folder(f_path)
+                Deployment.openFolder(f_path)
                 # Stop the entire process
-                st.stop()
 
     '''
     Print header
@@ -63,6 +66,7 @@ class Deployment:
                         "The uploaded file does not contain a worksheet named 'Keywords List'. Please upload a valid file.")
                 else:
                     st.error(f"An error occurred while reading the file: {e}")
+                st.stop()
 
     '''
     Display uploaded file
@@ -77,14 +81,26 @@ class Deployment:
     Open file explorer window for a given folder path
     '''
     @staticmethod
-    def open_folder(folder_path):
+    def openFolder(folder_path):
         os.startfile(folder_path)
 
 
 if __name__ == '__main__':
-    if runtime.exists():
+    # Initialize a variable to indicate whether the runtime environment exists
+    runtime_available = True
+
+    if runtime_available:
+        # If the runtime environment exists, create a Deployment object and start the runner
         dep = Deployment()
         dep.runner()
     else:
+        # If the runtime environment doesn't exist, start the Streamlit application
         sys.argv = ['streamlit', 'run', 'app.py']
         sys.exit(stcli.main())
+
+# This code checks for the presence of a specific runtime environment and launches a Streamlit application if the
+# environment doesn't exist. The 'runtime' object is used to check for the environment, and the 'exists()' function
+# returns True if the environment is present and False otherwise. If the environment exists, a Deployment object is
+# created and its 'runner()' method is called. Otherwise, the Streamlit application is started using the 'sys.argv' and
+# 'stcli.main()' functions.
+
