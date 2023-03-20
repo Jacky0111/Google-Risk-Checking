@@ -52,6 +52,7 @@ class GRC:
     df_ori = pd.DataFrame()
 
     def __init__(self, input_file):
+        self.name_list = []
         self.input_file = input_file
         self.url_file = f"{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
         self.content_file = f"{Path(self.url_file).stem.replace(' ', '')}_Content.xlsx"
