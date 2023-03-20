@@ -33,11 +33,8 @@ class Deployment:
 
             # Create a button in Streamlit
             if st.button('Open Folder'):
-                global runtime_available
-                runtime_available = False
                 # Call the open_folder function with the folder path as an argument
                 Deployment.openFolder(f_path)
-                # Stop the entire process
 
     '''
     Print header
@@ -86,10 +83,7 @@ class Deployment:
 
 
 if __name__ == '__main__':
-    # Initialize a variable to indicate whether the runtime environment exists
-    runtime_available = True
-
-    if runtime_available:
+    if runtime.exists():
         # If the runtime environment exists, create a Deployment object and start the runner
         dep = Deployment()
         dep.runner()
