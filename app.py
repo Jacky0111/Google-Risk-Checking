@@ -1,5 +1,6 @@
 import os
 import sys
+import webbrowser
 import pandas as pd
 import streamlit as st
 from streamlit import runtime
@@ -29,12 +30,18 @@ class Deployment:
             grc = GRC(file_path)
             f_path, self.df = grc.runner()
             self.display()
-            st.write(f'Done! Files saved at {f_path} ')
 
-            # Create a button in Streamlit
-            if st.button('Open Folder'):
-                # Call the open_folder function with the folder path as an argument
-                Deployment.openFolder(f_path)
+            st.write(f'Done! Files saved at {f_path}')
+            # Create a clickable text that opens the folder when clicked
+            folder_link = f'<a href="file:///{f_path}" target="_blank">Open Folder</a>'
+            if st.markdown(folder_link, unsafe_allow_html=True):
+                webbrowser.open_new(f_path)
+
+            # # Create a button in Streamlit
+            # if st.button('Open Folder'):
+            #     # Call the open_folder function with the folder path as an argument
+            #     Deployment.openFolder(f_path)
+            #     st.stop()
 
     '''
     Print header
@@ -83,24 +90,14 @@ class Deployment:
 
 
 if __name__ == '__main__':
-    # Set environment variables
-    os.environ['STREAMLIT_SERVER_PORT'] = '8501'
-
-    # Run the Streamlit app
-    command = "streamlit run --server.port $STREAMLIT_SERVER_PORT app.py"
-    os.system(command)
-
-    dep = Deployment()
-    dep.runner()
-
-    # if runtime.exists():
-    #     # If the runtime environment exists, create a Deployment object and start the runner
-    #     dep = Deployment()
-    #     dep.runner()
-    # else:
-    #     # If the runtime environment doesn't exist, start the Streamlit application
-    #     sys.argv = ['streamlit', 'run', 'app.py']
-    #     sys.exit(stcli.main())
+    if runtime.exists():
+        # If the runtime environment exists, create a Deployment object and start the runner
+        dep = Deployment()
+        dep.runner()
+    else:
+        # If the runtime environment doesn't exist, start the Streamlit application
+        sys.argv = ['streamlit', 'run', 'app.py']
+        sys.exit(stcli.main())
 
 # This code checks for the presence of a specific runtime environment and launches a Streamlit application if the
 # environment doesn't exist. The 'runtime' object is used to check for the environment, and the 'exists()' function
