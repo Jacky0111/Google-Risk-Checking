@@ -1,6 +1,7 @@
 import os
 import sys
 import webbrowser
+import subprocess
 import pandas as pd
 import streamlit as st
 from streamlit import runtime
@@ -33,9 +34,9 @@ class Deployment:
 
             st.write(f'Done! Files saved at {f_path}')
             # Create a clickable text that opens the folder when clicked
-            folder_link = f'<a href="file:///{f_path}" target="_blank">Open Folder</a>'
+            folder_link = f'<a href="file://{f_path}" target="_blank">Open Folder</a>'
             if st.markdown(folder_link, unsafe_allow_html=True):
-                webbrowser.open_new(f_path)
+                Deployment.openFolder(f_path)
 
             # # Create a button in Streamlit
             # if st.button('Open Folder'):
@@ -86,7 +87,7 @@ class Deployment:
     '''
     @staticmethod
     def openFolder(folder_path):
-        os.startfile(folder_path)
+        webbrowser.open_new(folder_path)
 
 
 if __name__ == '__main__':
