@@ -34,9 +34,9 @@ class Deployment:
 
             st.write(f'Done! Files saved at {f_path}')
             # Create a clickable text that opens the folder when clicked
-            folder_link = f'<a href="file://{f_path}" target="_blank">Open Folder</a>'
-            if st.markdown(folder_link, unsafe_allow_html=True):
-                Deployment.openFolder(f_path)
+            # folder_link = f'<a href="file://{f_path}" target="_blank">Open Folder</a>'
+            # if st.markdown(folder_link, unsafe_allow_html=True):
+            #     Deployment.openFolder(f_path)
 
             # # Create a button in Streamlit
             # if st.button('Open Folder'):
