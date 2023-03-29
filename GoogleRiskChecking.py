@@ -233,7 +233,8 @@ class GRC:
 
             # Check if keyword exists in the content column and store result in `Keyword Hit?` column
             self.df3['Keyword Hit?'] = self.df3['Text Content'].apply(lambda x: self.keywordsChecking(x))
-        except:
+        except Exception as e:
+            print(f"An error occurred: {e}")
             pass
 
         # Write final output to Excel file
