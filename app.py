@@ -1,7 +1,6 @@
-import os
 import sys
+import tempfile
 import webbrowser
-import subprocess
 import pandas as pd
 import streamlit as st
 from streamlit import runtime
@@ -18,6 +17,7 @@ class Deployment:
 
     keywords = None
     output_name = None
+    import_fp = None
     uploaded_file = None
 
     def __init__(self):
@@ -27,8 +27,7 @@ class Deployment:
 
     def runner(self):
         if self.uploaded_file is not None:
-            file_path = self.uploaded_file.name
-            grc = GRC(file_path)
+            grc = GRC(self.import_fp)
             f_path, self.df = grc.runner()
             self.display()
 
@@ -58,20 +57,28 @@ class Deployment:
         self.uploaded_file = st.file_uploader("Upload your input XLSX file", type=['xlsx'])
 
         if self.uploaded_file is not None:
-            # Read the Excel file into a dictionary of dataframes, with Sheet1 and Keywords List as keys
-            try:
-                df_dict = pd.read_excel(self.uploaded_file, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
-                # Extract the Sheet1 dataframe and the list of keywords from the Keywords List dataframe
-                self.df = df_dict['Sheet1']
-                self.keywords = df_dict['Keywords List']['Keywords'].tolist()
-                self.display()
-            except ValueError as e:
-                if str(e) == "Worksheet named 'Keywords List' not found":
-                    st.warning(
-                        "The uploaded file does not contain a worksheet named 'Keywords List'. Please upload a valid file.")
-                else:
-                    st.error(f"An error occurred while reading the file: {e}")
-                st.stop()
+            # Create a temporary file to save the uploaded file
+            with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
+                # Write the contents of the uploaded file to the temporary file
+                tmp_file.write(self.uploaded_file.read())
+
+                # Get the file path of the temporary file
+                self.import_fp = tmp_file.name
+
+                # Read the Excel file into a dictionary of dataframes, with Sheet1 and Keywords List as keys
+                try:
+                    df_dict = pd.read_excel(self.import_fp, engine='openpyxl', sheet_name=['Sheet1', 'Keywords List'])
+                    # Extract the Sheet1 dataframe and the list of keywords from the Keywords List dataframe
+                    self.df = df_dict['Sheet1']
+                    self.keywords = df_dict['Keywords List']['Keywords'].tolist()
+                    self.display()
+                except ValueError as e:
+                    if str(e) == "Worksheet named 'Keywords List' not found":
+                        st.warning(
+                            "The uploaded file does not contain a worksheet named 'Keywords List'. Please upload a valid file.")
+                    else:
+                        st.error(f"An error occurred while reading the file: {e}")
+                    st.stop()
 
     '''
     Display uploaded file
