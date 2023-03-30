@@ -15,8 +15,6 @@ from fuzzywuzzy import fuzz
 from urllib.parse import urlparse
 from openpyxl.styles import Font, Color
 
-import streamlit as st
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
@@ -41,6 +39,7 @@ class GRC:
     url_file = None
     content_file = None
     output_file = None
+    user_excel_path = None
 
     keywords = []
     node_list = []  # To store dom tree
@@ -54,9 +53,10 @@ class GRC:
     def __init__(self, input_file):
         self.name_list = []
         self.input_file = input_file
-        self.url_file = f"{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
-        self.content_file = f"{Path(self.url_file).stem.replace(' ', '')}_Content.xlsx"
-        self.output_file = f"{Path(self.content_file).stem.replace(' ', '')}_OutputFile.xlsx"
+        os.makedirs('Archive', exist_ok=True)
+        self.url_file = f"Archive/{Path(self.input_file).stem.replace(' ', '')}_URL.xlsx"
+        self.content_file = f"Archive/{Path(self.url_file).stem.replace(' ', '')}_Content.xlsx"
+        self.output_file = f"Archive/{Path(self.content_file).stem.replace(' ', '')}_OutputFile.xlsx"
         self.current_date_time = str(datetime.datetime.now().strftime("%H%M-%d-%b-%Y"))
 
     '''
@@ -75,7 +75,7 @@ class GRC:
 
         # Step 3: Create clickable path text
         GRC.clickablePathText(self.output_file)
-        GRC.clickablePathText(self.user_path + self.output_file)
+        GRC.clickablePathText(self.user_excel_path)
 
         return self.user_path, self.df3
 
@@ -192,8 +192,9 @@ class GRC:
 
                     # Move the downloaded file to the specified local path
                     with open(temp_pdf, 'rb') as f1:
-                        with open(path_list[0] + '.pdf', 'wb') as f2:
-                            f2.write(f1.read())
+                        for p in path_list:
+                            with open(p + '.pdf', 'wb') as f2:
+                                f2.write(f1.read())
 
                     # Read the PDF file and extract text
                     with pdfplumber.open(temp_pdf) as pdf:
@@ -238,8 +239,11 @@ class GRC:
             pass
 
         # Write final output to Excel file
-        self.df3.to_excel(self.user_path + self.output_file, index=False)
+        self.user_excel_path = self.user_path + Path(self.user_path).name + '_OutputFile.xlsx'
+        print(self.user_excel_path)
+        self.df3.to_excel(self.user_excel_path, index=False)
         self.df3.to_excel(self.output_file, index=False)
+
 
     '''
     This function performs visual block extraction on the website and extracts text content from the resulting 
@@ -519,12 +523,12 @@ class GRC:
     @staticmethod
     def setFolderName(url, alert_id, number, dd, tt):
         parse_url = urlparse(url)
-        path = r'Outputs/' + alert_id + '_' + number + '_' + dd + '-' + tt + '/'
+        path = f'Outputs/{alert_id}_{number}_{dd}_{tt}/'
         os.makedirs(path)
         return path + parse_url.netloc
 
 
 if __name__ == '__main__':
-    grc = GRC(input_file=r'test_file.xlsx')
+    grc = GRC(input_file=r'demo.xlsx')
     grc.runner()
 
