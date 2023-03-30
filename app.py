@@ -1,3 +1,4 @@
+import os
 import sys
 import tempfile
 import webbrowser
@@ -35,7 +36,7 @@ class Deployment:
             # Create a clickable text that opens the folder when clicked
             # folder_link = f'<a href="file://{f_path}" target="_blank">Open Folder</a>'
             # if st.markdown(folder_link, unsafe_allow_html=True):
-            #     Deployment.openFolder(f_path)
+            Deployment.openFolder(f_path)
 
             # # Create a button in Streamlit
             # if st.button('Open Folder'):
@@ -55,10 +56,18 @@ class Deployment:
     '''
     def uploadFile(self):
         self.uploaded_file = st.file_uploader("Upload your input XLSX file", type=['xlsx'])
+        saved_path = r'C:\Users\CP1\Documents\GitHub\Compliance-HRC\Archive'
+
+        # Check if the directory exists, and create it if it does not
+        if not os.path.exists(saved_path):
+            os.makedirs(saved_path)
 
         if self.uploaded_file is not None:
             # Create a temporary file to save the uploaded file
-            with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(prefix=self.uploaded_file.name[0:-5],
+                                             suffix=".xlsx",
+                                             delete=False,
+                                             dir=r'C:\Users\CP1\Documents\GitHub\Compliance-HRC\Archive') as tmp_file:
                 # Write the contents of the uploaded file to the temporary file
                 tmp_file.write(self.uploaded_file.read())
 
@@ -79,6 +88,11 @@ class Deployment:
                     else:
                         st.error(f"An error occurred while reading the file: {e}")
                     st.stop()
+        else:
+            # Clear all variables and pause the app
+            st.session_state.clear()
+            print(self.df)
+            st.stop()
 
     '''
     Display uploaded file
